@@ -1,21 +1,21 @@
 import {Annotation} from "./viz/interactor/annotation";
 import {Protein} from "./viz/interactor/protein";
-import {BioactiveEntity}  from "./viz/interactor/bioactive-entity";
+import {BioactiveEntity} from "./viz/interactor/bioactive-entity";
 import {Gene} from "./viz/interactor/gene";
 import {DNA} from "./viz/interactor/dna";
 import {RNA} from "./viz/interactor/rna";
 import {Complex} from "./viz/interactor/complex";
 import {ComplexSymbol} from "./viz/interactor/complex-symbol";
-import {MoleculeSet}  from "./viz/interactor/molecule-set";
+import {MoleculeSet} from "./viz/interactor/molecule-set";
 import {NaryLink} from "./viz/link/nary-link";
 import {FeatureLink} from "./viz/link/feature-link";
-import {SequenceDatum}  from "./viz/sequence-datum";
+import {SequenceDatum} from "./viz/sequence-datum";
 import {BinaryLink} from "./viz/link/binary-link";
-import {UnaryLink}  from "./viz/link/unary-link";
+import {UnaryLink} from "./viz/link/unary-link";
 import {matrix} from "./expand";
 
 // reads MI JSON format
-export function readMijson (/*miJson*/miJson, /*App*/ app, expand = true) {
+export function readMijson(/*miJson*/miJson, /*App*/ app, expand = true) {
     //check that we've got a parsed javascript object here, not a String
     miJson = (typeof miJson === "object") ? miJson : JSON.parse(miJson);
     miJson.data = miJson.data.reverse();
@@ -215,6 +215,7 @@ export function readMijson (/*miJson*/miJson, /*App*/ app, expand = true) {
 
     function newParticipant(interactor, participantId, interactorRef) {
         let participant;
+
         if (typeof interactor == "undefined" || interactor.type.id === "MI:1302") {
             //must be a previously unencountered complex -
             // MI:0314 - interaction?, MI:0317 - complex? and its many subclasses
@@ -227,75 +228,59 @@ export function readMijson (/*miJson*/miJson, /*App*/ app, expand = true) {
                 }
             }
 
-
             if (interactionExists) {
                 participant = new Complex(participantId, app, interactorRef);
                 complexes.set(participantId, participant);
             } else {
                 participant = new ComplexSymbol(participantId, app, interactorRef, interactor);
             }
-        }else if (interactor.type.id === "MI:1304" //molecule set
-            ||
-            interactor.type.id === "MI:1305" //molecule set - candidate set
-            ||
-            interactor.type.id === "MI:1307" //molecule set - defined set
-            ||
-            interactor.type.id === "MI:1306" //molecule set - open set
-        ) {
-            participant = new MoleculeSet(participantId, app, interactor, interactor.label);
-        } else if (interactor.type.id === "MI:1100" // bioactive entity
-            ||
-            interactor.type.id === "MI:0904" // bioactive entity - polysaccharide
-            ||
-            interactor.type.id === "MI:0328" //bioactive entity - small mol
-        ) {
-            participant = new BioactiveEntity(participantId, app, interactor, interactor.label);
-        } else if (interactor.type.id === "MI:0326" || interactor.type.id === "MI:0327") { // proteins, peptides
-            participant = new Protein(participantId, app, interactor, interactor.label, interactor.sequence);
-        } else if (interactor.type.id === "MI:0250") { //genes
-            participant = new Gene(participantId, app, interactor, interactor.label);
-        } else if (interactor.type.id === "MI:0320" // RNA
-            ||
-            interactor.type.id === "MI:0321" // RNA - catalytic
-            ||
-            interactor.type.id === "MI:0322" // RNA - guide
-            ||
-            interactor.type.id === "MI:0323" // RNA - heterogeneous nuclear
-            ||
-            interactor.type.id === "MI:2190" // RNA - long non-coding
-            ||
-            interactor.type.id === "MI:0324" // RNA - messenger
-            ||
-            interactor.type.id === "MI:0679" // RNA - poly adenine
-            ||
-            interactor.type.id === "MI:0608" // RNA - ribosomal
-            ||
-            interactor.type.id === "MI:0611" // RNA - signal recognition particle
-            ||
-            interactor.type.id === "MI:0610" // RNA - small interfering
-            ||
-            interactor.type.id === "MI:0607" // RNA - small nuclear
-            ||
-            interactor.type.id === "MI:0609" // RNA - small nucleolar
-            ||
-            interactor.type.id === "MI:0325" // RNA - transfer
-            ||
-            interactor.type.id === "IA:2966" // RNA - double stranded ribonucleic acid
-            ||
-            interactor.type.id === "MI:0318" // nucleic acid
-        ) {
-            participant = new RNA(participantId, app, interactor, interactor.label);
-        } else if (interactor.type.id === "MI:0319" // DNA
-            ||
-            interactor.type.id === "MI:0681" // DNA - double stranded
-            ||
-            interactor.type.id === "MI:0680" // DNA - single stranded
-        ) {
-            participant = new DNA(participantId, app, interactor, interactor.label);
-        } else {
-            // MI:0329 - unknown participant ?
-            // MI:0383 - biopolymer ?
-            alert("Unrecognised type:" + interactor.type.name);
+        } else switch (interactor.type.id) {
+            case "MI:1304": // molecule set
+            case "MI:1305": // molecule set - candidate set
+            case "MI:1307": // molecule set - defined set
+            case "MI:1306": // molecule set - open set
+                participant = new MoleculeSet(participantId, app, interactor, interactor.label);
+                break;
+            case "MI:1100": // bioactive entity
+            case "MI:0904": // bioactive entity - polysaccharide
+            case "MI:0328": // bioactive entity - small molecule
+            case "MI:2258": // bioactive entity - xenobiotic
+                participant = new BioactiveEntity(participantId, app, interactor, interactor.label);
+                break;
+            case "MI:0326": // proteins
+            case "MI:0327": // peptides
+                participant = new Protein(participantId, app, interactor, interactor.label, interactor.sequence);
+                break;
+            case "MI:0250": // genes
+                participant = new Gene(participantId, app, interactor, interactor.label);
+                break;
+            case "MI:0318": // Nucleic Acid
+            case "MI:0320": // RNA
+            case "MI:0321": // RNA - catalytic RNA
+            case "MI:0322": // RNA - guide RNA
+            case "MI:0323": // RNA - heterogeneous nuclear rna
+            case "MI:0324": // RNA - messenger rna
+            case "MI:0325": // RNA - transfer rna
+            case "MI:0607": // RNA - small nuclear rna
+            case "MI:0608": // RNA - ribosomal rna
+            case "MI:0609": // RNA - small nucleolar rna
+            case "MI:0610": // RNA - small interfering rna
+            case "MI:0611": // RNA - signal recognition particle rna
+            case "MI:0679": // RNA - poly adenine
+            case "MI:2190": // RNA - long non-coding ribonucleic acid
+            case "MI:2204": // RNA - micro rna
+            case "MI:2359": // RNA - ds rna
+                participant = new RNA(participantId, app, interactor, interactor.label);
+                break;
+            case "MI:0319": // DNA
+            case "MI:0681": // DNA - double stranded
+            case "MI:0680": // DNA - single stranded
+                participant = new DNA(participantId, app, interactor, interactor.label);
+                break;
+            default:
+                // MI:0329 - unknown participant ?
+                // MI:0383 - biopolymer ?
+                alert("Unrecognised type:" + interactor.type.name);
         }
         return participant;
     }
