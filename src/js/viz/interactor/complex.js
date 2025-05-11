@@ -13,21 +13,6 @@ export class Complex extends Interactor {
         this.upperGroup = document.createElementNS(svgns, "g");
         this.initLabel();
         this.padding = 28;
-
-        // const self = this;
-        // // its bad if you end up with these getting called
-        // Object.defineProperty(this, "width", {
-        //     get: function height() {
-        //         return self.naryLink.path.getBBox().width;
-        //         //return 160;
-        //     }
-        // });
-        // Object.defineProperty(this, "height", {
-        //     get: function height() {
-        //         return self.naryLink.path.getBBox().height;
-        //         //return 160;
-        //     }
-        // });
     }
 
     initLink(naryLink) {
@@ -36,15 +21,14 @@ export class Complex extends Interactor {
     }
 
     setLinked() {
-
         this.naryLink.path2.classList.add("linked-complex");
     }
 
     getPosition(originPoint) {
-        let mapped = this.naryLink.mapped;//getMappedCoordinates();
+        let mapped = this.naryLink.mapped;
         if (!mapped) {
             this.naryLink.setLinkCoordinates();
-            mapped = this.naryLink.mapped;//this.naryLink.orbitNodeCount(this.naryLink.getMappedCoordinates());
+            mapped = this.naryLink.mapped;
         }
         const mc = mapped.length;
         let xSum = 0,
@@ -55,8 +39,6 @@ export class Complex extends Interactor {
         }
         let center = [xSum / mc, ySum / mc];
         if (originPoint) {
-            // if (participant.type === "complex"){
-            //     startPoint = participant.getPosition();
             let naryPath = this.naryLink.hull;
             let iPath = [];
             for (let p of naryPath) {

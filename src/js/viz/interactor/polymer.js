@@ -4,8 +4,6 @@ import {easeCubicInOut} from "d3-ease";
 import {rotatePointAboutPoint} from "../../geom";
 import {svgns} from "../../svgns";
 import {Interactor} from "./interactor";
-// import {Annotation} from "./annotation";
-// import {SequenceDatum} from "../sequence-datum";
 
 export class Polymer extends Interactor {
     constructor() {

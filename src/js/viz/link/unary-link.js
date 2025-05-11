@@ -1,5 +1,3 @@
-//todo - is this even working? you never see it
-
 import {HideableLink} from "./hideable-link";
 
 export class UnaryLink extends HideableLink {
