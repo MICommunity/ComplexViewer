@@ -1,4 +1,3 @@
-// import * as d3 from "d3"; //used for d3.geom.hull
 import {polygonHull} from "d3-polygon";
 import {Link} from "./link";
 import {rotatePointAboutPoint} from "../../geom";
@@ -12,23 +11,6 @@ export class NaryLink extends Link {
         this.binaryLinks = new Map();
         this.unaryLinks = new Map();
     }
-
-    /*
-    NaryLink.prototype.getTotalParticipantCount = function () {
-        let result = 0;
-        const c = this.participants.length;
-        for (let p = 0; p < c; p++) {
-            const participant = this.participants[p];
-            //console.log("! " + typeof participant);
-            if (participant.type !== "complex") {
-                result++;
-            } else {
-                result += participant.naryLink.getTotalParticipantCount();
-            }
-        }
-        return result;
-    };
-    */
 
     get path () {
         if (!this._path) {
@@ -65,7 +47,7 @@ export class NaryLink extends Link {
 
     show() {
         // this.path.setAttribute("stroke-width", this.app.z);
-        // this.setLinkCoordinates(); // todo - having this here slows down start up. instead see lines 41-44 complex.js
+        // this.setLinkCoordinates(); // having this here slows down start up. instead see getPosition in complex.js
         this.app.naryLinks.appendChild(this.path);
         this.app.naryLinks.appendChild(this.path2);
     }

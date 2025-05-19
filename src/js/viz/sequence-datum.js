@@ -22,7 +22,6 @@ export class SequenceDatum {
         }
 
         if (this.sequenceDatumString === "?-?") {
-            //this.begin = 1;
             this.end = 1; //todo - having it at begining is affecting shape of line, look at why
             this.uncertainEnd = participant.size ? participant.size : 1;
         } else if (this.sequenceDatumString === "n-n") {
@@ -34,11 +33,11 @@ export class SequenceDatum {
             const firstPart = sequenceDatumString.substring(0, dashPosition);
             const secondPart = sequenceDatumString.substring(dashPosition + 1);
 
-            if (firstPart == '?') {
+            if (firstPart === "?") {
                 this.uncertainBegin = 1;
                 this.begin = tidyPosition(secondPart);
                 this.end = null;
-            } else if (secondPart == '?') {
+            } else if (secondPart === "?") {
                 this.uncertainEnd = participant.size;
                 this.end = tidyPosition(firstPart);
                 this.begin = null;
@@ -63,14 +62,12 @@ export class SequenceDatum {
                 if (this.begin === "n") {
                     this.uncertainBegin = 1;
                     this.begin = tidyPosition(this.end);
-                    // this.uncertainEnd = this.end;
                     this.end = null;
                 }
 
                 if (this.end === "c") {
                     this.uncertainEnd = participant.size;
                     this.end = tidyPosition(this.begin);
-                    // this.uncertainBegin = this.begin;
                     this.begin = null;
                 }
 

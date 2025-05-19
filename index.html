@@ -44,38 +44,38 @@
                     <table class="symbols">
                         <tr>
                             <td>
-                                <img src="./src/imgs/key-svg/molecule-set.svg">
+                                <img src="./src/imgs/key-svg/molecule-set.svg" alt="molecule set">
                             </td>
                             <td>Molecule Set</td>
                         </tr>
                         <tr>
                             <td>
-                                <img src="./src/imgs/key-svg/small-molecule.svg">
+                                <img src="./src/imgs/key-svg/small-molecule.svg" alt="small molecule">
                             </td>
                             <td>Bioactive Entity</td>
                         </tr>
                         <tr>
                             <td>
-                                <img src="./src/imgs/key-svg/gene.svg">
+                                <img src="./src/imgs/key-svg/gene.svg" alt="gene">
                             </td>
                             <td>Gene</td>
                         </tr>
                         <tr>
                             <td>
-                                <img src="./src/imgs/key-svg/dna.svg">
+                                <img src="./src/imgs/key-svg/dna.svg" alt="dna">
                             </td>
                             <td>DNA</td>
                         </tr>
                         <tr>
                             <td>
-                                <img src="./src/imgs/key-svg/rna.svg">
+                                <img src="./src/imgs/key-svg/rna.svg" alt="rna">
                             </td>
                             <td>RNA</td>
                         </tr>
                         <tr>
                             <td>
-                                <img src="./src/imgs/key-svg/protein-circle.svg">
-                                <img src="./src/imgs/key-svg/protein-bar.svg">
+                                <img src="./src/imgs/key-svg/protein-circle.svg" alt="protein circle">
+                                <img src="./src/imgs/key-svg/protein-bar.svg" alt="protein bar">
                             </td>
                             <td>Protein <br> (click to toggle)</td>
                         </tr>
@@ -143,8 +143,8 @@
 <script type="text/javascript">
     //<![CDATA[
 
-    for (var i = 0; i < exampleIndex.length; i++) {
-        var example = exampleIndex[i];
+    for (let i = 0; i < exampleIndex.length; i++) {
+        const example = exampleIndex[i];
         const dataSetsSelect = document.getElementById("dataSets");
         const opt = document.createElement("option");
         opt.value = example.ac;
@@ -178,7 +178,7 @@
     }
 
     function setAnnotations(checkbox) {
-        var json = cv.showAnnotations(checkbox.value, checkbox.checked);
+        const json = cv.showAnnotations(checkbox.value, checkbox.checked);
         console.log(json);
         makeLegend(json);
     }
