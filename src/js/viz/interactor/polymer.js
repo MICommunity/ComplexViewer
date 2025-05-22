@@ -4,8 +4,6 @@ import {easeCubicInOut} from "d3-ease";
 import {rotatePointAboutPoint} from "../../geom";
 import {svgns} from "../../svgns";
 import {Interactor} from "./interactor";
-// import {Annotation} from "./annotation";
-// import {SequenceDatum} from "../sequence-datum";
 
 export class Polymer extends Interactor {
     constructor() {
@@ -202,10 +200,8 @@ export class Polymer extends Interactor {
         const labelTranslateInterpol = d3.interpolate(labelStartPoint, -(r + 5));
 
         let xInterpol = null;//,
-        // yInterpol = null;
         if (typeof svgP !== "undefined" && svgP !== null) {
             xInterpol = d3.interpolate(this.ix, svgP.x);
-            // yInterpol = d3.interpolate(this.iy, svgP.y);
         }
 
         const self = this;
@@ -255,7 +251,7 @@ export class Polymer extends Interactor {
             self.labelSVG.transform.baseVal.initialize(self.app.svgElement.createSVGTransformFromMatrix(k));
 
             if (xInterpol !== null) {
-                self.setPosition(xInterpol(cubicInOut(interp)), self.iy);//yInterpol(cubicInOut(interp)));
+                self.setPosition(xInterpol(cubicInOut(interp)), self.iy);
             }
 
             self.stickZoom = stickZoomInterpol(cubicInOut(interp));
@@ -625,8 +621,7 @@ export class Polymer extends Interactor {
         let top, bottom, rungHeight;
         const rung = annotation.rung;
         if (rung === -1) {
-            bottom = 0;
-            top = radius;
+            console.error("Error: rung is -1 for annotation: " + annotation);
         } else if (startRes === "n-n") {
             rungHeight = radius / this.nTermFeatures.length;
         } else if (endRes === "c-c") {

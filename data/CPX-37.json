@@ -1,0 +1,433 @@
+{
+  "data": [
+    {
+      "object": "interactor",
+      "id": "chebi_CHEBI:29108",
+      "type": {
+        "id": "MI:0328",
+        "name": "small molecule"
+      },
+      "organism": {
+        "taxid": "-2",
+        "common": "chemical synthesis",
+        "scientific": "Chemical synthesis (Chemical synthesis)"
+      },
+      "identifier": {
+        "db": "chebi",
+        "id": "CHEBI:29108"
+      },
+      "label": "calcium(2+)"
+    },
+    {
+      "object": "interactor",
+      "id": "chebi_CHEBI:29035",
+      "type": {
+        "id": "MI:0328",
+        "name": "small molecule"
+      },
+      "organism": {
+        "taxid": "-2",
+        "common": "chemical synthesis",
+        "scientific": "Chemical synthesis (Chemical synthesis)"
+      },
+      "identifier": {
+        "db": "chebi",
+        "id": "CHEBI:29035"
+      },
+      "label": "manganese(2+)"
+    },
+    {
+      "object": "interactor",
+      "id": "chebi_CHEBI:29105",
+      "type": {
+        "id": "MI:0328",
+        "name": "small molecule"
+      },
+      "organism": {
+        "taxid": "-2",
+        "common": "chemical synthesis",
+        "scientific": "Chemical synthesis (Chemical synthesis)"
+      },
+      "identifier": {
+        "db": "chebi",
+        "id": "CHEBI:29105"
+      },
+      "label": "zinc(2+)"
+    },
+    {
+      "object": "interactor",
+      "id": "uniprotkb_P05109",
+      "sequence": "MLTELEKALNSIIDVYHKYSLIKGNFHAVYRDDLKKLLETECPQYIRKKGADVWFKELDINTDGAVNFQEFLILVIKMGVAAHKKSHEESHKE",
+      "type": {
+        "id": "MI:0326",
+        "name": "protein"
+      },
+      "organism": {
+        "taxid": "9606",
+        "common": "human",
+        "scientific": "Homo sapiens"
+      },
+      "identifier": {
+        "db": "uniprotkb",
+        "id": "P05109"
+      },
+      "label": "S100A8"
+    },
+    {
+      "object": "interactor",
+      "id": "uniprotkb_P06702",
+      "sequence": "MTCKMSQLERNIETIINTFHQYSVKLGHPDTLNQGEFKELVRKDLQNFLKKENKNEKVIEHIMEDLDTNADKQLSFEEFIMLMARLTWASHEKMHEGDEGPGHHHKPGLGEGTP",
+      "type": {
+        "id": "MI:0326",
+        "name": "protein"
+      },
+      "organism": {
+        "taxid": "9606",
+        "common": "human",
+        "scientific": "Homo sapiens"
+      },
+      "identifier": {
+        "db": "uniprotkb",
+        "id": "P06702"
+      },
+      "label": "S100A9"
+    },
+    {
+      "object": "interaction",
+      "id": "complex portal_CPX-37",
+      "interactionType": {
+        "id": "MI:0915",
+        "name": "physical association"
+      },
+      "complexType": {
+        "id": "MI:1302",
+        "name": "stable complex"
+      },
+      "evidenceType": {
+        "id": "ECO:0000353",
+        "name": "physical interaction evidence used in manual assertion"
+      },
+      "organism": {
+        "taxid": "9606",
+        "common": "human",
+        "scientific": "Homo sapiens"
+      },
+      "identifiers": [
+        {
+          "db": "signor",
+          "id": "SIGNOR-C293"
+        },
+        {
+          "db": "wwpdb",
+          "id": "4GGF"
+        },
+        {
+          "db": "complex portal",
+          "id": "CPX-37"
+        },
+        {
+          "db": "wwpdb",
+          "id": "1XK4"
+        },
+        {
+          "db": "wwpdb",
+          "id": "8sjc"
+        },
+        {
+          "db": "wwpdb",
+          "id": "5w1f"
+        },
+        {
+          "db": "wwpdb",
+          "id": "4xjk"
+        },
+        {
+          "db": "wwpdb",
+          "id": "8sjb"
+        },
+        {
+          "db": "wwpdb",
+          "id": "6ds2"
+        },
+        {
+          "db": "intact",
+          "id": "EBI-10098135"
+        }
+      ],
+      "participants": [
+        {
+          "id": "1",
+          "interactorRef": "chebi_CHEBI:29108",
+          "bioRole": {
+            "id": "MI:0499",
+            "name": "unspecified role"
+          },
+          "features": [
+            {
+              "id": "2",
+              "name": "s100a9 binding region",
+              "category": "bindingSites",
+              "type": {
+                "id": "MI:0117",
+                "name": "binding-associated region"
+              },
+              "sequenceData": [
+                {
+                  "pos": "?-?",
+                  "interactorRef": "chebi_CHEBI:29108",
+                  "participantRef": "1"
+                }
+              ],
+              "linkedFeatures": [
+                "3"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "4",
+          "interactorRef": "chebi_CHEBI:29035",
+          "bioRole": {
+            "id": "MI:0499",
+            "name": "unspecified role"
+          }
+        },
+        {
+          "id": "5",
+          "interactorRef": "chebi_CHEBI:29105",
+          "bioRole": {
+            "id": "MI:0499",
+            "name": "unspecified role"
+          }
+        },
+        {
+          "id": "6",
+          "interactorRef": "chebi_CHEBI:29108",
+          "bioRole": {
+            "id": "MI:0499",
+            "name": "unspecified role"
+          },
+          "features": [
+            {
+              "id": "7",
+              "name": "s100a8 binding region",
+              "category": "bindingSites",
+              "type": {
+                "id": "MI:0117",
+                "name": "binding-associated region"
+              },
+              "sequenceData": [
+                {
+                  "pos": "?-?",
+                  "interactorRef": "chebi_CHEBI:29108",
+                  "participantRef": "6"
+                }
+              ],
+              "linkedFeatures": [
+                "8"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "9",
+          "interactorRef": "uniprotkb_P05109",
+          "stoichiometry": "2",
+          "bioRole": {
+            "id": "MI:0499",
+            "name": "unspecified role"
+          },
+          "features": [
+            {
+              "id": "10",
+              "name": "s100a9 binding region",
+              "category": "bindingSites",
+              "type": {
+                "id": "MI:0117",
+                "name": "binding-associated region"
+              },
+              "sequenceData": [
+                {
+                  "pos": "?-?",
+                  "interactorRef": "uniprotkb_P05109",
+                  "participantRef": "9"
+                }
+              ],
+              "linkedFeatures": [
+                "11"
+              ]
+            },
+            {
+              "id": "8",
+              "name": "n-terminal EF hand",
+              "category": "bindingSites",
+              "type": {
+                "id": "MI:0117",
+                "name": "binding-associated region"
+              },
+              "sequenceData": [
+                {
+                  "pos": "46-81",
+                  "interactorRef": "uniprotkb_P05109",
+                  "participantRef": "9"
+                }
+              ],
+              "linkedFeatures": [
+                "7"
+              ],
+              "InterPro": "IPR013787"
+            },
+            {
+              "id": "12",
+              "name": "c-terminal EF hand",
+              "category": "bindingSites",
+              "type": {
+                "id": "MI:0117",
+                "name": "binding-associated region"
+              },
+              "sequenceData": [
+                {
+                  "pos": "46-81",
+                  "interactorRef": "uniprotkb_P05109",
+                  "participantRef": "9"
+                }
+              ],
+              "linkedFeatures": [
+                "13"
+              ],
+              "InterPro": "IPR002048"
+            }
+          ]
+        },
+        {
+          "id": "14",
+          "interactorRef": "uniprotkb_P06702",
+          "stoichiometry": "2",
+          "bioRole": {
+            "id": "MI:0499",
+            "name": "unspecified role"
+          },
+          "features": [
+            {
+              "id": "11",
+              "name": "s100a8 binding region",
+              "category": "bindingSites",
+              "type": {
+                "id": "MI:0117",
+                "name": "binding-associated region"
+              },
+              "sequenceData": [
+                {
+                  "pos": "?-?",
+                  "interactorRef": "uniprotkb_P06702",
+                  "participantRef": "14"
+                }
+              ],
+              "linkedFeatures": [
+                "10"
+              ]
+            },
+            {
+              "id": "15",
+              "name": "n-terminal EF hand",
+              "category": "bindingSites",
+              "type": {
+                "id": "MI:0117",
+                "name": "binding-associated region"
+              },
+              "sequenceData": [
+                {
+                  "pos": "12-47",
+                  "interactorRef": "uniprotkb_P06702",
+                  "participantRef": "14"
+                }
+              ],
+              "linkedFeatures": [
+                "16"
+              ],
+              "InterPro": "IPR013787"
+            },
+            {
+              "id": "3",
+              "name": "c-terminal EF hand",
+              "category": "bindingSites",
+              "type": {
+                "id": "MI:0117",
+                "name": "binding-associated region"
+              },
+              "sequenceData": [
+                {
+                  "pos": "54-81",
+                  "interactorRef": "uniprotkb_P06702",
+                  "participantRef": "14"
+                }
+              ],
+              "linkedFeatures": [
+                "2"
+              ],
+              "InterPro": "IPR002048"
+            }
+          ]
+        },
+        {
+          "id": "17",
+          "interactorRef": "chebi_CHEBI:29108",
+          "bioRole": {
+            "id": "MI:0499",
+            "name": "unspecified role"
+          },
+          "features": [
+            {
+              "id": "13",
+              "name": "s100a8 binding region",
+              "category": "bindingSites",
+              "type": {
+                "id": "MI:0117",
+                "name": "binding-associated region"
+              },
+              "sequenceData": [
+                {
+                  "pos": "?-?",
+                  "interactorRef": "chebi_CHEBI:29108",
+                  "participantRef": "17"
+                }
+              ],
+              "linkedFeatures": [
+                "12"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "18",
+          "interactorRef": "chebi_CHEBI:29108",
+          "bioRole": {
+            "id": "MI:0499",
+            "name": "unspecified role"
+          },
+          "features": [
+            {
+              "id": "16",
+              "name": "s100a9 binding region",
+              "category": "bindingSites",
+              "type": {
+                "id": "MI:0117",
+                "name": "binding-associated region"
+              },
+              "sequenceData": [
+                {
+                  "pos": "?-?",
+                  "interactorRef": "chebi_CHEBI:29108",
+                  "participantRef": "18"
+                }
+              ],
+              "linkedFeatures": [
+                "15"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

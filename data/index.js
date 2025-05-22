@@ -1,7 +1,22 @@
 // eslint-disable-next-line no-unused-vars
 const exampleIndex = [
     {
-        "ac": "CPX-5684",
+        "ac": "CPX-5602",
+        "name": "CPX-5602",
+        "url": "https://www.ebi.ac.uk/complexportal/complex/CPX-5602"
+    },
+    {
+        "ac": "CPX-37",
+        "name": "CPX-37",
+        "url": "https://www.ebi.ac.uk/complexportal/complex/CPX-37"
+        },
+
+    {
+        "ac": "CPX-8545",
+        "name": "CPX-8545",
+        "url": "https://www.ebi.ac.uk/complexportal/complex/CPX-8545"
+    },
+    {   "ac": "CPX-5684",
         "name": "CPX-5684",
         "url": "https://www.ebi.ac.uk/complexportal/complex/CPX-5684",
     },

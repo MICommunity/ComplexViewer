@@ -250,10 +250,8 @@ export class App {
         this.defaultBarScale = takeClosest(App.barScales, defaultPixPerRes);
 
         for (let participant of this.participants.values()) {
-            if (participant.type !== "complex") {
-                participant.setPosition(-500, -500);
-                this.proteinUpper.appendChild(participant.upperGroup);
-            }
+            participant.setPosition(-500, -500);
+            this.proteinUpper.appendChild(participant.upperGroup);
         }
         for (let participant of this.participants.values()) {
             if (participant.type === "protein") {

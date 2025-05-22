@@ -57,7 +57,7 @@ export class Interactor {
             this.labelText = this.id;
         }
         if (this.labelText.length > 25) {
-            this.labelText = `${this.labelText.substr(0, 16)}...`;
+            this.labelText = `${this.labelText.substring(0, 16)}...`;
         }
         this.labelText = this.name;
         this.labelTextNode = document.createTextNode(this.labelText);
@@ -196,6 +196,9 @@ export class Interactor {
     setAllLinkCoordinates() {
         for (let link of this.naryLinks.values()) {
             link.setLinkCoordinates();
+            if (link.complex){
+                link.complex.setLabelPosition();
+            }
         }
         for (let link of this.binaryLinks.values()) {
             link.setLinkCoordinates();

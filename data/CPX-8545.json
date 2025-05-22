@@ -1,0 +1,151 @@
+{
+  "data": [
+    {
+      "object": "interactor",
+      "id": "uniprotkb_Q13002",
+      "sequence": "MKIIFPILSNPVFRRTVKLLLCLLWIGYSQGTTHVLRFGGIFEYVESGPMGAEELAFRFAVNTINRNRTLLPNTTLTYDTQKINLYDSFEASKKACDQLSLGVAAIFGPSHSSSANAVQSICNALGVPHIQTRWKHQVSDNKDSFYVSLYPDFSSLSRAILDLVQFFKWKTVTVVYDDSTGLIRLQELIKAPSRYNLRLKIRQLPADTKDAKPLLKEMKRGKEFHVIFDCSHEMAAGILKQALAMGMMTEYYHYIFTTLDLFALDVEPYRYSGVNMTGFRILNTENTQVSSIIEKWSMERLQAPPKPDSGLLDGFMTTDAALMYDAVHVVSVAVQQFPQMTVSSLQCNRHKPWRFGTRFMSLIKEAHWEGLTGRITFNKTNGLRTDFDLDVISLKEEGLEKIGTWDPASGLNMTESQKGKPANITDSLSNRSLIVTTILEEPYVLFKKSDKPLYGNDRFEGYCIDLLRELSTILGFTYEIRLVEDGKYGAQDDANGQWNGMVRELIDHKADLAVAPLAITYVREKVIDFSKPFMTLGISILYRKPNGTNPGVFSFLNPLSPDIWMYILLAYLGVSCVLFVIARFSPYEWYNPHPCNPDSDVVENNFTLLNSFWFGVGALMQQGSELMPKALSTRIVGGIWWFFTLIIISSYTANLAAFLTVERMESPIDSADDLAKQTKIEYGAVEDGATMTFFKKSKISTYDKMWAFMSSRRQSVLVKSNEEGIQRVLTSDYAFLMESTTIEFVTQRNCNLTQIGGLIDSKGYGVGTPMGSPYRDKITIAILQLQEEGKLHMMKEKWWRGNGCPEEESKEASALGVQNIGGIFIVLAAGLVLSVFVAVGEFLYKSKKNAQLEKRSFCSAMVEELRMSLKCQRRLKHKPQAPVIVKTEEVINMHTFNDRRLPGKETMA",
+      "type": {
+        "id": "MI:0326",
+        "name": "protein"
+      },
+      "organism": {
+        "taxid": "9606",
+        "common": "human",
+        "scientific": "Homo sapiens"
+      },
+      "identifier": {
+        "db": "uniprotkb",
+        "id": "Q13002"
+      },
+      "label": "GRIK2"
+    },
+    {
+      "object": "interactor",
+      "id": "uniprotkb_P39086",
+      "sequence": "MEHGTLLAQPGLWTRDTSWALLYFLCYILPQTAPQVLRIGGIFETVENEPVNVEELAFKFAVTSINRNRTLMPNTTLTYDIQRINLFDSFEASRRACDQLALGVAALFGPSHSSSVSAVQSICNALEVPHIQTRWKHPSVDNKDLFYINLYPDYAAISRAILDLVLYYNWKTVTVVYEDSTGLIRLQELIKAPSRYNIKIKIRQLPSGNKDAKPLLKEMKKGKEFYVIFDCSHETAAEILKQILFMGMMTEYYHYFFTTLDLFALDLELYRYSGVNMTGFRLLNIDNPHVSSIIEKWSMERLQAPPRPETGLLDGMMTTEAALMYDAVYMVAIASHRASQLTVSSLQCHRHKPWRLGPRFMNLIKEARWDGLTGHITFNKTNGLRKDFDLDIISLKEEGTEKAAGEVSKHLYKVWKKIGIWNSNSGLNMTDSNKDKSSNITDSLANRTLIVTTILEEPYVMYRKSDKPLYGNDRFEGYCLDLLKELSNILGFIYDVKLVPDGKYGAQNDKGEWNGMVKELIDHRADLAVAPLTITYVREKVIDFSKPFMTLGISILYRKPNGTNPGVFSFLNPLSPDIWMYVLLACLGVSCVLFVIARFTPYEWYNPHPCNPDSDVVENNFTLLNSFWFGVGALMQQGSELMPKALSTRIVGGIWWFFTLIIISSYTANLAAFLTVERMESPIDSADDLAKQTKIEYGAVRDGSTMTFFKKSKISTYEKMWAFMSSRQQTALVRNSDEGIQRVLTTDYALLMESTSIEYVTQRNCNLTQIGGLIDSKGYGVGTPIGSPYRDKITIAILQLQEEGKLHMMKEKWWRGNGCPEEDNKEASALGVENIGGIFIVLAAGLVLSVFVAIGEFIYKSRKNNDIEQAFCFFYGLQCKQTHPTNSTSGTTLSTDLECGKLIREERGIRKQSSVHTV",
+      "type": {
+        "id": "MI:0326",
+        "name": "protein"
+      },
+      "organism": {
+        "taxid": "9606",
+        "common": "human",
+        "scientific": "Homo sapiens"
+      },
+      "identifier": {
+        "db": "uniprotkb",
+        "id": "P39086"
+      },
+      "label": "GRIK1"
+    },
+    {
+      "object": "interaction",
+      "id": "complex portal_CPX-8545",
+      "interactionType": {
+        "id": "MI:0915",
+        "name": "physical association"
+      },
+      "complexType": {
+        "id": "MI:1302",
+        "name": "stable complex"
+      },
+      "evidenceType": {
+        "id": "ECO:0005544",
+        "name": "biological system reconstruction evidence based on orthology evidence used in manual assertion"
+      },
+      "organism": {
+        "taxid": "9606",
+        "common": "human",
+        "scientific": "Homo sapiens"
+      },
+      "identifiers": [
+        {
+          "db": "complex portal",
+          "id": "CPX-8545"
+        },
+        {
+          "db": "reactome",
+          "id": "R-HSA-450210"
+        },
+        {
+          "db": "intact",
+          "id": "EBI-48421736"
+        }
+      ],
+      "participants": [
+        {
+          "id": "1",
+          "interactorRef": "uniprotkb_Q13002",
+          "minStoichiometry": "1",
+          "maxStoichiometry": "3",
+          "bioRole": {
+            "id": "MI:0499",
+            "name": "unspecified role"
+          },
+          "features": [
+            {
+              "id": "2",
+              "name": "Grik1 binding region",
+              "category": "bindingSites",
+              "type": {
+                "id": "MI:0117",
+                "name": "binding-associated region"
+              },
+              "sequenceData": [
+                {
+                  "pos": "429-544",
+                  "interactorRef": "uniprotkb_Q13002",
+                  "participantRef": "1"
+                },
+                {
+                  "pos": "667-806",
+                  "interactorRef": "uniprotkb_Q13002",
+                  "participantRef": "1"
+                }
+              ],
+              "linkedFeatures": [
+                "3"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "4",
+          "interactorRef": "uniprotkb_P39086",
+          "minStoichiometry": "1",
+          "maxStoichiometry": "3",
+          "bioRole": {
+            "id": "MI:0499",
+            "name": "unspecified role"
+          },
+          "features": [
+            {
+              "id": "3",
+              "name": "Grik2 binding region",
+              "category": "bindingSites",
+              "type": {
+                "id": "MI:0117",
+                "name": "binding-associated region"
+              },
+              "sequenceData": [
+                {
+                  "pos": "445-559",
+                  "interactorRef": "uniprotkb_P39086",
+                  "participantRef": "4"
+                },
+                {
+                  "pos": "682-820",
+                  "interactorRef": "uniprotkb_P39086",
+                  "participantRef": "4"
+                }
+              ],
+              "linkedFeatures": [
+                "2"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
