@@ -14,20 +14,15 @@ export function fetchAnnotations(/*App*/ app, callback) {
     const molCount = proteins.length;
 
     for (let prot of proteins) {
+        protsAnnotated++;
         const uniprotAccRegex = new RegExp("[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}![-]", "i");
         const match = uniprotAccRegex.exec(prot.json.identifier.id);
         if (match && match[0] === prot.json.identifier.id.trim()) {
-            getSuperFamFeatures(prot, function () {
-                protsAnnotated++;
-                if (protsAnnotated === molCount) {
-                    callback();
-                }
+            getSuperFamFeatures(prot, () => {
+                if (protsAnnotated === molCount) callback();
             });
-            getUniProtFeatures(prot, function () {
-                protsAnnotated++;
-                if (protsAnnotated === molCount) {
-                    callback();
-                }
+            getUniProtFeatures(prot, () => {
+                if (protsAnnotated === molCount) callback();
             });
         }
     }
