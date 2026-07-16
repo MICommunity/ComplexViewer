@@ -24,6 +24,9 @@ export function fetchAnnotations(/*App*/ app, callback) {
             getUniProtFeatures(prot, () => {
                 if (protsAnnotated === molCount) callback();
             });
+            getDisProtFeatures(prot, () => {
+                if (protsAnnotated === molCount) callback();
+            });
         }
     }
 }
@@ -39,6 +42,30 @@ function getUniProtFeatures(prot, callback) {
         if (json) {
             for (let feature of json.features.filter(ft => ft.type === "DOMAIN")) {
                 const anno = new Annotation(feature.description, new SequenceDatum(null, `${feature.begin}-${feature.end}`));
+                annotations.push(anno);
+            }
+        }
+        callback();
+    });
+}
+
+const DISPROT_TYPE_TO_NAME = new Map([
+    ['D', 'Disorder'],
+    ['T', 'Transition'],
+    ['F', 'Function']
+]);
+
+function getDisProtFeatures(prot, callback) {
+    const url = `https://disprot.org/api/search?page_size=1&page=0&release=current&show_ambiguous=false&show_obsolete=false&acc=${prot.json.identifier.id.trim()}`;
+    d3.json(url).then(json => {
+        let annotations = prot.annotationSets.get("DisProt");
+        if (typeof annotations === "undefined") {
+            annotations = [];
+            prot.annotationSets.set("DisProt", annotations);
+        }
+        if (json) {
+            for (let feature of (json.data[0]?.['disprot_consensus']?.['full'] || [])) {
+                const anno = new Annotation(DISPROT_TYPE_TO_NAME.get(feature.type), new SequenceDatum(null, `${feature.start}-${feature.end}`));
                 annotations.push(anno);
             }
         }

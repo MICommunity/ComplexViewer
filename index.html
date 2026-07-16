@@ -104,6 +104,10 @@
                                autocomplete="off"
                                onchange="setAnnotations(this);">
                         <label for="superfamily"> Superfamily</label>
+                        <input type="checkbox" id="disprot" name="disprot" value="DisProt"
+                               autocomplete="off"
+                               onchange="setAnnotations(this);">
+                        <label for="disprot"> DisProt</label>
                         <input type="checkbox" id="interactor" name="interactor" value="Interactor"
                                autocomplete="off"
                                onchange="setAnnotations(this);">
@@ -125,15 +129,15 @@
 
     <div class="logo-bar space-between">
         <a class="logo" href="https://rappsilberlab.org/" target="_blank"><img src="images/logos/rappsilber-logo.png"
-                                                                              alt="Rappsilber Laboratory"></a>
+                                                                               alt="Rappsilber Laboratory"></a>
         <a class="logo" href="https://www.ed.ac.uk/" target="_blank"><img src="./images/logos/eduni.jpeg"
-                                                                         alt="Edinburgh University"></a>
+                                                                          alt="Edinburgh University"></a>
         <a class="logo" href="https://www.wcb.ed.ac.uk/" target="_blank"><img src="images/logos/wtccb.png"
-                                                                             alt="Wellcome Trust Centre for Cell Biology"></a>
+                                                                              alt="Wellcome Trust Centre for Cell Biology"></a>
         <a class="logo" href="https://www.ebi.ac.uk/" target="_blank"><img src="images/logos/ebi-logo.jpeg"
-                                                                          alt="European Bioinformatics Institute"></a>
+                                                                           alt="European Bioinformatics Institute"></a>
         <a class="logo" href="https://intermine.org/" target="_blank"><img src="./images/logos/intermine.png"
-                                                                          alt="Intermine"></a>
+                                                                           alt="Intermine"></a>
         <a class="logo" href="https://www.cam.ac.uk/" target="_blank"><img src="./images/logos/cambridge-blue.png"
                                                                            alt="Cambridge University"></a>
     </div>
@@ -201,19 +205,17 @@
                     tc1.style.width = "45px";
                     const tc2 = tr.insertCell();
                     const color = legendEntry.uncertain.color
-                    tc2.style.background = "repeating-linear-gradient(45deg, #ffffff, #ffffff 6px, "+color+" 6px, "+color+" 12px)";
+                    tc2.style.background = "repeating-linear-gradient(45deg, #ffffff, #ffffff 6px, " + color + " 6px, " + color + " 12px)";
                     tc2.style.width = "45px";
-                }
-                else if (legendEntry.certain) {
+                } else if (legendEntry.certain) {
                     const tc1 = tr.insertCell();
                     tc1.style.backgroundColor = legendEntry.certain.color;
                     tc1.style.width = "90px";
                     tc1.colSpan = 2;
-                }
-                else if (legendEntry.uncertain) {
+                } else if (legendEntry.uncertain) {
                     const tc1 = tr.insertCell();
                     const color = legendEntry.uncertain.color
-                    tc1.style.background = "repeating-linear-gradient(45deg, #ffffff, #ffffff 6px, "+color+" 6px, "+color+" 12px)";
+                    tc1.style.background = "repeating-linear-gradient(45deg, #ffffff, #ffffff 6px, " + color + " 6px, " + color + " 12px)";
                     tc1.style.width = "90px";
                     tc1.colSpan = 2;
                 }
