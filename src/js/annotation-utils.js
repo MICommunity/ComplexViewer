@@ -64,7 +64,7 @@ function getDisProtFeatures(prot, callback) {
             prot.annotationSets.set("DisProt", annotations);
         }
         if (json) {
-            for (let feature of (json.data[0]?.['disprot_consensus']?.['full'] || [])) {
+            for (let feature of (json.data[0]?.['disprot_consensus']?.['Structural state'] || [])) {
                 const anno = new Annotation(DISPROT_TYPE_TO_NAME.get(feature.type), new SequenceDatum(null, `${feature.start}-${feature.end}`));
                 annotations.push(anno);
             }
