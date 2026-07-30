@@ -49,30 +49,91 @@ function getUniProtFeatures(prot, callback) {
     });
 }
 
-const DISPROT_TYPE_TO_NAME = new Map([
-    ['D', 'Disorder'],
-    ['T', 'Transition'],
-    ['F', 'Function']
-]);
+//const DISPROT_TYPE_TO_NAME = new Map([
+//    ['D', 'Disorder'],
+//    ['T', 'Transition'],
+//    ['F', 'Function']
+//]);
+
+//function getDisProtFeatures(prot, callback) {
+//    const url = `https://disprot.org/api/search?page_size=1&page=0&release=current&show_ambiguous=false&show_obsolete=false&acc=${prot.json.identifier.id.trim()}`;
+//    d3.json(url).then(json => {
+//        let annotations = prot.annotationSets.get("DisProt");
+//        if (typeof annotations === "undefined") {
+//            annotations = [];
+//            prot.annotationSets.set("DisProt", annotations);
+//        }
+//        if (json) {
+//            for (let feature of (json.data[0]?.['disprot_consensus']?.['Biological process'] || [])) {
+//                const anno = new Annotation(DISPROT_TYPE_TO_NAME.get(feature.type), new SequenceDatum(null, `${feature.start}-${feature.end}`));
+//                annotations.push(anno);
+//            }
+//        }
+//        callback();
+//    });
+//}
 
 function getDisProtFeatures(prot, callback) {
     const url = `https://disprot.org/api/search?page_size=1&page=0&release=current&show_ambiguous=false&show_obsolete=false&acc=${prot.json.identifier.id.trim()}`;
+
     d3.json(url).then(json => {
         let annotations = prot.annotationSets.get("DisProt");
         if (typeof annotations === "undefined") {
             annotations = [];
             prot.annotationSets.set("DisProt", annotations);
         }
-        if (json) {
-            for (let feature of (json.data[0]?.['disprot_consensus']?.['Structural state'] || [])) {
-                const anno = new Annotation(DISPROT_TYPE_TO_NAME.get(feature.type), new SequenceDatum(null, `${feature.start}-${feature.end}`));
-                annotations.push(anno);
+
+        const data = json?.data?.[0];
+        const consensus = data?.['disprot_consensus'];
+
+        const regionNameMap = new Map(
+            (data?.['regions'] || [])
+                .map(region => [`${region.term_namespace}:${region.start}-${region.end}`, region.term_name])
+        );
+
+        const namespaceToRegions = {
+            // Branch 1: Structural state
+            'Structural state': [],
+
+            // Branch 2: Structural transition
+            'Structural transition': [],
+
+            // Branch 3: Disorder function (we group all functions here)
+            'Disorder function': [],
+            'Biological process': [],
+            'Molecular function': [],
+            'Cellular component': []
+        };
+        data.regions.forEach(region => namespaceToRegions[region.term_namespace].push(region));
+
+        function getDescription(namespace, feature) {
+            return regionNameMap.get(`${namespace}:${feature.start}-${feature.end}`) // Direct region match to consensus
+                || namespaceToRegions[namespace].find(region => region.start >= feature.start && region.end <= feature.end).term_name // Find consensus name for region
+                || namespace;
+        }
+
+        // Dictionary to group the JSON keys into the 3 ontology branches
+
+        // const FUNCTION_NAMESPACES = new Set(['Disorder function', 'Biological process', 'Molecular function', 'Cellular component']);
+
+        if (consensus) {
+
+
+            for (const [namespace, regions] of Object.entries(namespaceToRegions)) {
+                const features = consensus[namespace] || [];
+
+                for (let feature of features) {
+                    // We use namespace so ComplexViewer assigns the same color to everything that is a function
+                    const region = `${feature.start}-${feature.end}`;
+                    // const groupedNamespace = FUNCTION_NAMESPACES.has(namespace) ? 'Function' : namespace;
+                    const anno = new Annotation(namespace, new SequenceDatum(null, region), getDescription(namespace, feature));
+                    annotations.push(anno);
+                }
             }
         }
         callback();
     });
 }
-
 
 function getSuperFamFeatures(prot, callback) {
     const url = `https://supfam.org/SUPERFAMILY/cgi-bin/das/up/features?segment=${prot.json.identifier.id.trim()}`;

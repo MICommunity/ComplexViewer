@@ -1,10 +1,11 @@
 export class Annotation {
-    constructor(annotationName, seqDatum) {
-        this.description = annotationName.trim();
+    constructor(category, seqDatum, description = null) {
+        this.category = category.trim();
         this.seqDatum = seqDatum;
+        this.description = description;
     }
 
     toString() {
-        return `${this.description} [${this.seqDatum ? this.seqDatum.toString() : `${this.seqDatum.begin} - ${this.seqDatum.end}`}]`;
+        return `${this.category} ${this.description ? ": " + this.description : ""} [${this.seqDatum ? this.seqDatum.toString() : `${this.seqDatum.begin} - ${this.seqDatum.end}`}]`;
     }
 }

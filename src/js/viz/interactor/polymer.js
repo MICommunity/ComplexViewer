@@ -514,8 +514,8 @@ export class Polymer extends Interactor {
                 const dupCheck = new Set();
                 //need to sort by description
                 const sortedAnnos = Array.from(annotations.values()).sort(function (a, b) {
-                    const nameA = a.description;
-                    const nameB = b.description;
+                    const nameA = a.category;
+                    const nameB = b.category;
                     if (nameA < nameB) {
                         return -1;
                     }

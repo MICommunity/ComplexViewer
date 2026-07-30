@@ -611,7 +611,7 @@ export class App {
             for (let [annotationType, annotationSet] of participant.annotationSets) {
                 if (this.annotationSetsShown.get(annotationType) === true) {
                     for (let annotation of annotationSet.values()) {
-                        categories.add(annotation.description);
+                        categories.add(annotation.category);
                     }
                 }
             }
@@ -647,6 +647,20 @@ export class App {
 
         const self = this;
 
+        const disprotColors = {
+            "Structural state": "#B67637",
+            "Structural transition": "#8B296F",
+            "Disorder function": "#BA2327",
+            //
+            //
+            // // Branch 3: Disorder function (we group all functions here)
+            // 'Biological process': "#cb5c5c",
+            // 'Molecular function': "#e64a4e",
+            // 'Cellular component': "#971e22"
+        };
+
+        const getDisprotOrNormalColor = (description) => disprotColors[description] || colorScheme(description);
+
         function createHatchedFill(name, color) {
             const pattern = self.defs.append("pattern")
                 .attr("id", name)
@@ -681,22 +695,22 @@ export class App {
                             if (anno.description === "No annotations") {
                                 color = "#eeeeee";
                             } else {
-                                color = colorScheme(anno.description);
+                                color = getDisprotOrNormalColor(anno.category);
                             }
                             if (anno.certain) {
                                 anno.certain.setAttribute("fill", color);
                                 anno.certain.setAttribute("stroke", color);
-                                this.certainCategories.add(anno.description);
+                                this.certainCategories.add(anno.category);
                             }
                             if (anno.fuzzyStart || anno.fuzzyEnd) {
                                 if (!this.uncertainCategories.has(name)) {
                                     // make transparent version of color
                                     const temp = new Rgb_color(color);
                                     const transpColor = `rgba(${temp.r},${temp.g},${temp.b}, 0.6)`;
-                                    createHatchedFill(`hatched_${anno.description}_${color.toString()}`, transpColor);
-                                    this.uncertainCategories.add(anno.description);
+                                    createHatchedFill(`hatched_${anno.category}_${color.toString()}`, transpColor);
+                                    this.uncertainCategories.add(anno.category);
                                 }
-                                const checkedFill = `url('#hatched_${anno.description}_${color.toString()}')`;
+                                const checkedFill = `url('#hatched_${anno.category}_${color.toString()}')`;
                                 if (anno.fuzzyStart) {
                                     anno.fuzzyStart.setAttribute("fill", checkedFill);
                                     anno.fuzzyStart.setAttribute("stroke", color);
@@ -711,7 +725,7 @@ export class App {
                 }
             }
         }
-        this.featureColors = colorScheme;
+        this.featureColors = getDisprotOrNormalColor;
     }
 
     getColorKeyJson() {
@@ -729,18 +743,18 @@ export class App {
                             const annos = p.annotationSets.get(annotationSet);
                             if (annos) {
                                 for (let anno of annos) {
-                                    const desc = anno.description;
-                                    if (!dupCheck.has(desc)) {
-                                        dupCheck.add(desc);
+                                    const category = anno.category;
+                                    if (!dupCheck.has(category)) {
+                                        dupCheck.add(category);
                                         const featureType = {
-                                            "name": desc
+                                            "name": category
                                         };
-                                        if (this.certainCategories.has(desc)) {
-                                            featureType.certain = {"color": this.featureColors(desc)};
+                                        if (this.certainCategories.has(category)) {
+                                            featureType.certain = {"color": this.featureColors(category)};
                                         }
-                                        if (this.uncertainCategories.has(desc)) {
+                                        if (this.uncertainCategories.has(category)) {
                                             // make transparent version of color
-                                            const temp = new Rgb_color(this.featureColors(desc));
+                                            const temp = new Rgb_color(this.featureColors(category));
                                             const transpColor = `rgba(${temp.r},${temp.g},${temp.b}, 0.6)`;
                                             featureType.uncertain = {"color": transpColor};
                                         }
