@@ -179,12 +179,15 @@ export class App {
         this.annotationSetsShown = new Map();
         ["Interactor", "UniprotKB", "Superfamily", "AlphaFold", "DisProt", "MI Features"]
             .forEach(a => this.annotationSetsShown.set(a, initialAnnotations.includes(a)));
+        this.annotationSetsLoaded = new Map();
+        this.resetAnnotationSetLoadingState();
 
         this.clear();
     }
 
     clear() {
         this.annotationLoadId = (this.annotationLoadId || 0) + 1;
+        this.resetAnnotationSetLoadingState();
         this.d3cola.stop();
         this.naryLinks.textContent = "";
         this.p_pLinksWide.textContent = "";
@@ -271,11 +274,7 @@ export class App {
         this.updateAnnotations(); //?
         const annotationLoadId = (this.annotationLoadId || 0) + 1;
         this.annotationLoadId = annotationLoadId;
-        fetchAnnotations(this, annotationLoadId, () => {
-            if (this.annotationLoadId === annotationLoadId) {
-                this.updateAnnotations();
-            }
-        });
+        fetchAnnotations(this, annotationLoadId);
         this.checkLinks();
         this.autoLayout();
     }
@@ -611,6 +610,27 @@ export class App {
         return this.getColorKeyJson();
     }
 
+    resetAnnotationSetLoadingState() {
+        this.annotationSetsLoaded.set("Interactor", true);
+        this.annotationSetsLoaded.set("MI Features", true);
+        ["UniprotKB", "Superfamily", "AlphaFold", "DisProt"]
+            .forEach(annotationSet => this.annotationSetsLoaded.set(annotationSet, false));
+    }
+
+    setAnnotationSetLoading(annotationSet) {
+        this.annotationSetsLoaded.set(annotationSet, false);
+    }
+
+    setAnnotationSetLoaded(annotationSet) {
+        this.annotationSetsLoaded.set(annotationSet, true);
+        this.updateAnnotations(); // Update annotations after having loaded a set
+    }
+
+    isAnnotationSetRenderable(annotationSet) {
+        return this.annotationSetsShown.get(annotationSet) === true
+            && this.annotationSetsLoaded.get(annotationSet) !== false;
+    }
+
     updateAnnotations() {
         //clear stuff
         this.defs.textContent = ""; // clears hatched fills
@@ -621,7 +641,7 @@ export class App {
         const categories = new Set();
         for (let participant of this.participants.values()) {
             for (let [annotationType, annotationSet] of participant.annotationSets) {
-                if (this.annotationSetsShown.get(annotationType) === true) {
+                if (this.isAnnotationSetRenderable(annotationType)) {
                     for (let annotation of annotationSet.values()) {
                         categories.add(annotation.category);
                     }
@@ -709,7 +729,7 @@ export class App {
                 participant.clearPositionalFeatures();
                 participant.updatePositionalFeatures();
                 for (let [annotationType, annotations] of participant.annotationSets) {
-                    if (this.annotationSetsShown.get(annotationType) === true) {
+                    if (this.isAnnotationSetRenderable(annotationType)) {
                         for (let anno of annotations) {
                             let color;
                             if (anno.description === "No annotations") {
@@ -757,7 +777,7 @@ export class App {
         }
         if (this.featureColors) {
             for (let [annotationSet, shown] of this.annotationSetsShown) {
-                if (shown) {
+                if (shown && this.isAnnotationSetRenderable(annotationSet)) {
                     const featureTypes = [];
                     const dupCheck = new Set();
                     for (let p of this.participants.values()) {

@@ -217,7 +217,7 @@ export class Polymer extends Interactor {
         const cubicInOut = easeCubicInOut;
         if (transition) {
             for (let [annotationType, annotations] of this.annotationSets) {
-                if (this.app.annotationSetsShown.get(annotationType) === true) {
+                if (this.app.isAnnotationSetRenderable(annotationType)) {
                     for (let anno of annotations) {
                         if (anno.fuzzyStart) {
                             const fuzzyStart = anno.fuzzyStart;
@@ -262,7 +262,7 @@ export class Polymer extends Interactor {
                 self.checkLinks();
 
                 for (let [annotationType, annotations] of self.annotationSets) {
-                    if (self.app.annotationSetsShown.get(annotationType) === true) {
+                    if (self.app.isAnnotationSetRenderable(annotationType)) {
                         for (let anno of annotations) {
                             if (anno.fuzzyStart) {
                                 const fuzzyStart = anno.fuzzyStart;
@@ -338,7 +338,7 @@ export class Polymer extends Interactor {
         const cubicInOut = easeCubicInOut;
         if (transition) {
             for (let [annotationType, annotations] of this.annotationSets) {
-                if (this.app.annotationSetsShown.get(annotationType) === true) {
+                if (this.app.isAnnotationSetRenderable(annotationType)) {
                     for (let anno of annotations) {
                         if (anno.fuzzyStart) {
                             const fuzzyStart = anno.fuzzyStart;
@@ -408,7 +408,7 @@ export class Polymer extends Interactor {
 
     updateAnnotationRectanglesNoTransition() {
         for (let [annotationType, annotations] of this.annotationSets) {
-            if (this.app.annotationSetsShown.get(annotationType) === true) {
+            if (this.app.isAnnotationSetRenderable(annotationType)) {
                 for (let anno of annotations) {
                     if (anno.fuzzyStart) {
                         const fuzzyStart = anno.fuzzyStart;
@@ -506,7 +506,7 @@ export class Polymer extends Interactor {
         }
 
         for (let [annotationType, annotations] of this.annotationSets) {
-            if (this.app.annotationSetsShown.get(annotationType) === true) {
+            if (this.app.isAnnotationSetRenderable(annotationType)) {
                 if (annotations && annotations.length > 0) {
                     r++;
                     rungs[r] = [];
@@ -553,7 +553,7 @@ export class Polymer extends Interactor {
         this.rungCount = r + 1;
 
         for (let [annotationType, annotations] of this.annotationSets) {
-            if (this.app.annotationSetsShown.get(annotationType) === true) {
+            if (this.app.isAnnotationSetRenderable(annotationType)) {
                 const dupCheck = new Set();
                 for (let anno of annotations.values()) {
                     if (!dupCheck.has(anno.toString())) {

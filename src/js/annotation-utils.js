@@ -32,14 +32,13 @@ async function resolveUniProtId(rawId) {
 /**
  * Main function to load annotations
  */
-export async function fetchAnnotations(/*App*/ app, loadId, annotationSetLoadedCallback) {
+export async function fetchAnnotations(/*App*/ app, loadId) {
     const proteinIdPromises = resolveProteinIds(getProteins(app));
     const groupPromises = Array.from(featureLoaders, ([annotationSet, featureLoader]) =>
         loadAnnotationSet(app, loadId, annotationSet, featureLoader, proteinIdPromises)
-            .then(() => annotationSetLoadedCallback && annotationSetLoadedCallback()) // Update legend per annotation set loaded
     );
 
-    return Promise.allSettled(groupPromises);
+    return Promise.allSettled(groupPromises); // Update legend and rendering of proteins when everything is loaded
 }
 
 // INITIAL FILTERING QUERIES
@@ -87,9 +86,6 @@ function loadAnnotationSet(app, loadId, annotationSet, featureLoader, proteinIdP
     });
 
     return Promise.allSettled(annotationPromises).then(results => {
-        if (isCurrentAnnotationLoad(app, loadId)) {
-            app.updateAnnotations();
-        }
         notifyAnnotationSetFinished(app, loadId, annotationSet, progress, results.length);
     });
 }
@@ -114,6 +110,9 @@ function notifyAnnotationLoadEvent(app, loadId, event) {
 }
 
 function notifyAnnotationSetStarted(app, loadId, annotationSet, progress) {
+    if (isCurrentAnnotationLoad(app, loadId) && app.setAnnotationSetLoading) {
+        app.setAnnotationSetLoading(annotationSet);
+    }
     notifyAnnotationLoadEvent(app, loadId, {
         type: "annotation-loading-start",
         annotationSet,
@@ -156,6 +155,9 @@ function notifyProteinAnnotationFailed(app, loadId, annotationSet, progress, err
 }
 
 function notifyAnnotationSetFinished(app, loadId, annotationSet, progress, total) {
+    if (isCurrentAnnotationLoad(app, loadId) && app.setAnnotationSetLoaded) {
+        app.setAnnotationSetLoaded(annotationSet);
+    }
     notifyAnnotationLoadEvent(app, loadId, {
         type: "annotation-loading-finish",
         annotationSet,
