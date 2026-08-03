@@ -271,11 +271,11 @@ export class App {
         this.updateAnnotations(); //?
         const annotationLoadId = (this.annotationLoadId || 0) + 1;
         this.annotationLoadId = annotationLoadId;
-        fetchAnnotations(this, () => {
+        fetchAnnotations(this, annotationLoadId, () => {
             if (this.annotationLoadId === annotationLoadId) {
                 this.updateAnnotations();
             }
-        }, annotationLoadId);
+        });
         this.checkLinks();
         this.autoLayout();
     }

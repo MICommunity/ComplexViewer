@@ -32,15 +32,14 @@ async function resolveUniProtId(rawId) {
 /**
  * Main function to load annotations
  */
-export async function fetchAnnotations(/*App*/ app, callback, loadId) {
+export async function fetchAnnotations(/*App*/ app, loadId, annotationSetLoadedCallback) {
     const proteinIdPromises = resolveProteinIds(getProteins(app));
     const groupPromises = Array.from(featureLoaders, ([annotationSet, featureLoader]) =>
         loadAnnotationSet(app, loadId, annotationSet, featureLoader, proteinIdPromises)
+            .then(() => annotationSetLoadedCallback && annotationSetLoadedCallback()) // Update legend per annotation set loaded
     );
 
-    return Promise.allSettled(groupPromises).then(() => {
-        if (callback) callback();
-    });
+    return Promise.allSettled(groupPromises);
 }
 
 // INITIAL FILTERING QUERIES
