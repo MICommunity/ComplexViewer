@@ -152,6 +152,29 @@ async function getSuperFamFeatures(prot, id) {
     });
 }
 
+const confidenceToCategory = {
+    "Very low": "Very low confidence",
+    "Low": "Low confidence",
+    "Confident": "High confidence",
+    "Very high": "Very high confidence"
+};
+
+async function getAlphaFoldFeatures(prot, id) {
+    const url = `https://disprot.org/api/alphafold/${id}`;
+    return d3.json(url).then(json => {
+        let annotations = prot.annotationSets.get("AlphaFold");
+        if (typeof annotations === "undefined") {
+            annotations = [];
+            prot.annotationSets.set("AlphaFold", annotations);
+        }
+
+        for (let reg of json) {
+            const anno = new Annotation(confidenceToCategory[reg.model_confidence], new SequenceDatum(null, `${reg.start}-${reg.end}`));
+            annotations.push(anno);
+        }
+
+    });
+}
 
 function decodeHTML(text) {
     return text.replace(/&([^;]+);/gm, (match, entity) => entities[entity] || match);

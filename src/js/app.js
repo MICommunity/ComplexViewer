@@ -658,8 +658,16 @@ export class App {
             // 'Molecular function': "#e64a4e",
             // 'Cellular component': "#971e22"
         };
+        // [ADDED]: AlphaFold confidence color mapping configuration
+        const alphaFoldColors = {
+            "Very high confidence": "#0053d6",
+            "High confidence": "#65cbf3",
+            "Low confidence": "#ffe915",
+            "Very low confidence": "#ff7d45"
+        };
 
-        const getDisprotOrNormalColor = (description) => disprotColors[description] || colorScheme(description);
+        const getCustomOrNormalColor = (description) =>
+            alphaFoldColors[description] || disprotColors[description] || colorScheme(description);
 
         function createHatchedFill(name, color) {
             const pattern = self.defs.append("pattern")
@@ -695,7 +703,8 @@ export class App {
                             if (anno.description === "No annotations") {
                                 color = "#eeeeee";
                             } else {
-                                color = getDisprotOrNormalColor(anno.category);
+                                //[MODIFIED]: Use the unified color selector instead of just DisProt
+                                color = getCustomOrNormalColor(anno.category);
                             }
                             if (anno.certain) {
                                 anno.certain.setAttribute("fill", color);
@@ -703,7 +712,7 @@ export class App {
                                 this.certainCategories.add(anno.category);
                             }
                             if (anno.fuzzyStart || anno.fuzzyEnd) {
-                                if (!this.uncertainCategories.has(name)) {
+                                if (!this.uncertainCategories.has(anno.category)) {
                                     // make transparent version of color
                                     const temp = new Rgb_color(color);
                                     const transpColor = `rgba(${temp.r},${temp.g},${temp.b}, 0.6)`;
@@ -725,7 +734,8 @@ export class App {
                 }
             }
         }
-        this.featureColors = getDisprotOrNormalColor;
+        //[MODIFIED]: Assign the new unified color resolver to featureColors
+        this.featureColors = getCustomOrNormalColor;
     }
 
     getColorKeyJson() {
