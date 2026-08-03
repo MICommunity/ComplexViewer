@@ -15,13 +15,19 @@ import {svgns} from "./svgns";
 
 import $ from "jquery";
 
+const defaultMaxCountInitiallyExpanded = 4;
+const defaultInitialAnnotations = ["MI Features"];
 export class App {
-    constructor(/*HTMLDivElement*/networkDiv, maxCountInitiallyExpanded = 4) {
+
+    constructor(/*HTMLDivElement*/networkDiv, {maxCountInitiallyExpanded = defaultMaxCountInitiallyExpanded , initialAnnotations = defaultInitialAnnotations}) {
+        maxCountInitiallyExpanded = maxCountInitiallyExpanded || defaultMaxCountInitiallyExpanded;
+        initialAnnotations = initialAnnotations || defaultInitialAnnotations;
+
         this.debug = false;
         this.el = networkDiv;
         //avoids prob with 'save - web page complete'
         this.el.textContent = ""; //https://stackoverflow.com/questions/3955229/remove-all-child-elements-of-a-dom-node-in-javascript
-        this.maxCountInitiallyExpanded = maxCountInitiallyExpanded;
+        this.maxCountInitiallyExpanded = maxCountInitiallyExpanded || 4;
         this.d3cola = cola.d3adaptor(d3).groupCompactness(Number.MIN_VALUE).avoidOverlaps(true); //1e-5
 
         const customMenuSel = d3.select(this.el)
@@ -99,6 +105,7 @@ export class App {
         //functions that get interactor id of hover over thing
         this.hoverListeners = new Set();
         this.expandListeners = new Set();
+        this.annotationListeners = new Set();
 
         this.el.appendChild(this.svgElement);
 
@@ -170,15 +177,14 @@ export class App {
         this.svgElement.appendChild(this.tooltip);
 
         this.annotationSetsShown = new Map();
-        this.annotationSetsShown.set("Interactor", false);
-        this.annotationSetsShown.set("UniprotKB", false);
-        this.annotationSetsShown.set("Superfamily", false);
-        this.annotationSetsShown.set("MI Features", true);
+        ["Interactor", "UniprotKB", "Superfamily", "AlphaFold", "DisProt", "MI Features"]
+            .forEach(a => this.annotationSetsShown.set(a, initialAnnotations.includes(a)));
 
         this.clear();
     }
 
     clear() {
+        this.annotationLoadId = (this.annotationLoadId || 0) + 1;
         this.d3cola.stop();
         this.naryLinks.textContent = "";
         this.p_pLinksWide.textContent = "";
@@ -263,7 +269,13 @@ export class App {
             }
         }
         this.updateAnnotations(); //?
-        fetchAnnotations(this, () => this.updateAnnotations());
+        const annotationLoadId = (this.annotationLoadId || 0) + 1;
+        this.annotationLoadId = annotationLoadId;
+        fetchAnnotations(this, () => {
+            if (this.annotationLoadId === annotationLoadId) {
+                this.updateAnnotations();
+            }
+        }, annotationLoadId);
         this.checkLinks();
         this.autoLayout();
     }
@@ -836,7 +848,21 @@ export class App {
     }
 
     removeExpandListener(expandListener) {
-        this.expandListeners.remove(expandListener);
+        this.expandListeners.delete(expandListener);
+    }
+
+    addAnnotationListener(annotationListener) {
+        this.annotationListeners.add(annotationListener);
+    }
+
+    removeAnnotationListener(annotationListener) {
+        this.annotationListeners.delete(annotationListener);
+    }
+
+    notifyAnnotationListeners(annotationEvent) {
+        for (let al of this.annotationListeners) {
+            al(annotationEvent);
+        }
     }
 
     notifyExpandListeners() {

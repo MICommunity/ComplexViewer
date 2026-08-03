@@ -2,6 +2,13 @@ import * as d3 from "d3";
 import {Annotation} from "./viz/interactor/annotation";
 import {SequenceDatum} from "./viz/sequence-datum";
 
+const featureLoaders = new Map([
+    ["Superfamily", getSuperFamFeatures],
+    ["UniprotKB", getUniProtFeatures],
+    ["DisProt", getDisProtFeatures],
+    ["AlphaFold", getAlphaFoldFeatures]
+]);
+
 // General and dynamic function to resolve UniProt IDs if they are not standard format
 async function resolveUniProtId(rawId) {
     const uniprotAccRegex = new RegExp("^[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}$", "i");
@@ -22,39 +29,145 @@ async function resolveUniProtId(rawId) {
 }
 
 //todo - cache annotations in memory
-export async function fetchAnnotations(/*App*/ app, callback) {
-    // we only show annotations on proteins
-    const proteins = Array.from(app.participants.values()).filter(function (value) {
-        return value.type === "protein";
-    });
+/**
+ * Main function to load annotations
+ */
+export async function fetchAnnotations(/*App*/ app, callback, loadId) {
+    const proteinIdPromises = resolveProteinIds(getProteins(app));
+    const groupPromises = Array.from(featureLoaders, ([annotationSet, featureLoader]) =>
+        loadAnnotationSet(app, loadId, annotationSet, featureLoader, proteinIdPromises)
+    );
 
-    const uniprotAccRegex = new RegExp("[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}![-]", "i");
-    const promises = [];
-
-    // Process all proteins concurrently using parallel promise handling
-    for (let prot of proteins) {
-        const rawId = prot.json?.identifier?.id?.trim();
-        if (!rawId) continue;
-
-        promises.push(
-            resolveUniProtId(rawId).then(mappedId => {
-                const match = uniprotAccRegex.exec(mappedId);
-                if (match && match[0] === mappedId) {
-                    return Promise.all([
-                        getSuperFamFeatures(prot, mappedId),
-                        getUniProtFeatures(prot, mappedId),
-                        getDisProtFeatures(prot, mappedId),
-                        getAlphaFoldFeatures(prot, mappedId)
-                    ]);
-                }
-            })
-        );
-    }
-
-    Promise.allSettled(promises).then(() => {
+    return Promise.allSettled(groupPromises).then(() => {
         if (callback) callback();
     });
 }
+
+// INITIAL FILTERING QUERIES
+
+function getProteins(app) {
+    return Array.from(app.participants.values()).filter(value => value.type === "protein");
+}
+
+function resolveProteinIds(proteins) {
+    const uniprotAccRegex = new RegExp("[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}![-]", "i");
+    return proteins.map(prot => {
+        const rawId = prot.json?.identifier?.id?.trim();
+        if (!rawId) return Promise.resolve();
+
+        return resolveUniProtId(rawId).then(mappedId => {
+            const match = uniprotAccRegex.exec(mappedId);
+            if (match && match[0] === mappedId) {
+                return {prot, mappedId};
+            }
+        });
+    });
+}
+
+// EVENT MANAGEMENT
+
+function loadAnnotationSet(app, loadId, annotationSet, featureLoader, proteinIdPromises) {
+    const progress = {
+        total: proteinIdPromises.length,
+        completed: 0,
+        failed: 0
+    };
+
+    notifyAnnotationSetStarted(app, loadId, annotationSet, progress);
+
+    const annotationPromises = proteinIdPromises.map(proteinIdPromise => {
+        return loadProteinAnnotation(proteinIdPromise, featureLoader)
+            .then(protein => {
+                notifyProteinAnnotationLoaded(app, loadId, annotationSet, progress, protein);
+                return protein;
+            })
+            .catch(error => {
+                notifyProteinAnnotationFailed(app, loadId, annotationSet, progress, error);
+                throw error;
+            });
+    });
+
+    return Promise.allSettled(annotationPromises).then(results => {
+        if (isCurrentAnnotationLoad(app, loadId)) {
+            app.updateAnnotations();
+        }
+        notifyAnnotationSetFinished(app, loadId, annotationSet, progress, results.length);
+    });
+}
+
+function loadProteinAnnotation(proteinIdPromise, featureLoader) {
+    return proteinIdPromise.then(protein => {
+        if (!protein) {
+            return {skipped: true};
+        }
+        return featureLoader(protein.prot, protein.mappedId).then(() => protein);
+    });
+}
+
+function isCurrentAnnotationLoad(app, loadId) {
+    return typeof loadId === "undefined" || app.annotationLoadId === loadId;
+}
+
+function notifyAnnotationLoadEvent(app, loadId, event) {
+    if (isCurrentAnnotationLoad(app, loadId) && app.notifyAnnotationListeners) {
+        app.notifyAnnotationListeners(event);
+    }
+}
+
+function notifyAnnotationSetStarted(app, loadId, annotationSet, progress) {
+    notifyAnnotationLoadEvent(app, loadId, {
+        type: "annotation-loading-start",
+        annotationSet,
+        loading: true,
+        total: progress.total,
+        completed: 0,
+        failed: 0
+    });
+}
+
+function notifyProteinAnnotationLoaded(app, loadId, annotationSet, progress, protein) {
+    progress.completed++;
+    notifyAnnotationLoadEvent(app, loadId, {
+        type: "annotation-protein-loaded",
+        annotationSet,
+        loading: true,
+        status: protein?.skipped ? "skipped" : "fulfilled",
+        protein: protein?.prot?.json,
+        participantId: protein?.prot?.id,
+        mappedId: protein?.mappedId,
+        total: progress.total,
+        completed: progress.completed,
+        failed: progress.failed
+    });
+}
+
+function notifyProteinAnnotationFailed(app, loadId, annotationSet, progress, error) {
+    progress.completed++;
+    progress.failed++;
+    notifyAnnotationLoadEvent(app, loadId, {
+        type: "annotation-protein-loaded",
+        annotationSet,
+        loading: true,
+        status: "rejected",
+        error,
+        total: progress.total,
+        completed: progress.completed,
+        failed: progress.failed
+    });
+}
+
+function notifyAnnotationSetFinished(app, loadId, annotationSet, progress, total) {
+    notifyAnnotationLoadEvent(app, loadId, {
+        type: "annotation-loading-finish",
+        annotationSet,
+        loading: false,
+        total,
+        completed: total - progress.failed,
+        failed: progress.failed
+    });
+}
+
+// FEATURE LOADING QUERIES
 
 function getUniProtFeatures(prot, id) {
     const url = `https://www.ebi.ac.uk/proteins/api/proteins/${id}`;
@@ -172,7 +285,6 @@ async function getAlphaFoldFeatures(prot, id) {
             const anno = new Annotation(confidenceToCategory[reg.model_confidence], new SequenceDatum(null, `${reg.start}-${reg.end}`));
             annotations.push(anno);
         }
-
     });
 }
 
