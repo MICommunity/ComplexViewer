@@ -62,7 +62,7 @@ function resolveProteinIds(proteins) {
     });
 }
 
-// EVENT MANAGEMENT
+// --- EVENT MANAGEMENT ---
 
 function loadAnnotationSet(app, loadId, annotationSet, featureLoader, proteinIdPromises) {
     const progress = {
