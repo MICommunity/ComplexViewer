@@ -186,6 +186,7 @@ function notifyAnnotationSetFinished(app, loadId, annotationSet, progress, total
 
 // FEATURE LOADING QUERIES
 
+//--------> UniProtKB
 function getUniProtFeatures(prot, id) {
     const url = `https://www.ebi.ac.uk/proteins/api/proteins/${id}`;
     return d3.json(url).then(json => {
@@ -203,6 +204,7 @@ function getUniProtFeatures(prot, id) {
     });
 }
 
+//--------> DisProt
 async function getDisProtFeatures(prot, id) {
     const url = `https://disprot.org/api/search?page_size=1&page=0&release=current&show_ambiguous=false&show_obsolete=false&acc=${id}`;
 
@@ -309,6 +311,7 @@ async function getSuperFamFeatures(prot, id) {
     });
 }
 
+//--------> AlphaFold
 const confidenceToCategory = {
     "Very low": "Very low confidence",
     "Low": "Low confidence",
