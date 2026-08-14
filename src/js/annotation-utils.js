@@ -6,7 +6,8 @@ const featureLoaders = new Map([
     ["Superfamily", getSuperFamFeatures],
     ["UniprotKB", getUniProtFeatures],
     ["DisProt", getDisProtFeatures],
-    ["AlphaFold", getAlphaFoldFeatures]
+    ["AlphaFold", getAlphaFoldFeatures],
+    ["ELM", getELMFeatures]
 ]);
 
 // ADD
@@ -258,6 +259,32 @@ async function getDisProtFeatures(prot, id) {
     });
 }
 
+//--------> ELM (MobiDB)
+// ELM data is fetched via MobiDB (https://mobidb.org) rather than elm.eu.org directly,
+// because elm.eu.org has no working HTTPS and gets blocked as mixed content from an
+// HTTPS-served page. The trade-off: MobiDB's "curated-lip-elm" field only gives merged
+// region coordinates, not per-instance motif names/PMIDs/instance links like ELM itself does.
+async function getELMFeatures(prot, id) {
+    const url = `https://mobidb.org/api/download?acc=${id}&format=json`;
+    const elmProteinUrl = getExternalLink("ELM", id);
+    return d3.json(url).then(json => {
+        let annotations = prot.annotationSets.get("ELM");
+        if (typeof annotations === "undefined") {
+            annotations = [];
+            prot.annotationSets.set("ELM", annotations);
+        }
+
+        const elmData = json?.["curated-lip-elm"];
+        if (!elmData || !elmData.regions) return;
+
+        for (let [start, end] of elmData.regions) {
+            const anno = new Annotation("Linear interacting peptide (ELM)", new SequenceDatum(null, `${start}-${end}`), null, elmProteinUrl);
+            annotations.push(anno);
+        }
+    });
+}
+
+//--------> SuperFam
 async function getSuperFamFeatures(prot, id) {
     const url = `https://supfam.org/SUPERFAMILY/cgi-bin/das/up/features?segment=${id}`;
     return d3.xml(url).then(xml => {

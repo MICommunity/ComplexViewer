@@ -213,7 +213,7 @@ export class App {
         this.svgElement.appendChild(this.tooltip);
 
         this.annotationSetsShown = new Map();
-        ["Interactor", "UniprotKB", "Superfamily", "AlphaFold", "DisProt", "MI Features"]
+        ["Interactor", "UniprotKB", "Superfamily", "AlphaFold", "DisProt", "ELM", "MI Features"]
             .forEach(a => this.annotationSetsShown.set(a, initialAnnotations.includes(a)));
         this.annotationSetsLoaded = new Map();
         this.resetAnnotationSetLoadingState();
@@ -650,7 +650,7 @@ export class App {
     resetAnnotationSetLoadingState() {
         this.annotationSetsLoaded.set("Interactor", true);
         this.annotationSetsLoaded.set("MI Features", true);
-        ["UniprotKB", "Superfamily", "AlphaFold", "DisProt"]
+        ["UniprotKB", "Superfamily", "AlphaFold", "DisProt", "ELM"]
             .forEach(annotationSet => this.annotationSetsLoaded.set(annotationSet, false));
     }
 
