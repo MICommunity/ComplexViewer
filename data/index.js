@@ -218,5 +218,15 @@ const exampleIndex = [
         "ac": "EBI-25475174",
         "name": "EBI-25475174",
         "url": "https://www.ebi.ac.uk/intact/complex/detail/EBI-25475174"
+    },
+    {
+    "ac": "EBI-1039007",
+    "name": "EBI-1039007",
+    "url": "https://www.ebi.ac.uk/intact/complex/detail/EBI-1039007"
+    },
+    {
+    "ac": "EBI-1061129",
+    "name": "EBI-1061129",
+    "url": "https://www.ebi.ac.uk/intact/complex/detail/EBI-1061129"
     }
 ];
