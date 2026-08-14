@@ -8,7 +8,8 @@ import Rgb_color from "rgb-color";
 
 import {svgUtils} from "./svgexp";
 import {readMijson} from "./read-mijson";
-import {fetchAnnotations} from "./annotation-utils";
+//import {fetchAnnotations} from "./annotation-utils";
+import {fetchAnnotations, getExternalLink} from "./annotation-utils";
 
 import {NaryLink} from "./viz/link/nary-link";
 import {svgns} from "./svgns";
@@ -34,6 +35,41 @@ export class App {
             .append("div").classed("custom-menu-margin", true)
             .append("div").classed("custom-menu", true)
             .append("ul");
+
+        // External DB links
+        this.uniprotLinkItem = customMenuSel.append("li")
+            .classed("external-link uniprot-link", true)
+            .style("display", "none");
+        this.uniprotLinkItem.append("a")
+            .attr("target", "_blank")
+            .attr("rel", "noopener")
+            .text("Open in UniProt");
+
+        this.disprotLinkItem = customMenuSel.append("li")
+            .classed("external-link disprot-link", true)
+            .style("display", "none");
+        this.disprotLinkItem.append("a")
+            .attr("target", "_blank")
+            .attr("rel", "noopener")
+            .text("Open in DisProt");
+
+        this.alphafoldLinkItem = customMenuSel.append("li")
+            .classed("external-link alphafold-link", true)
+            .style("display", "none");
+        this.alphafoldLinkItem.append("a")
+            .attr("target", "_blank")
+            .attr("rel", "noopener")
+            .text("Open in AlphaFold");
+
+        // -----> ELM
+        this.elmLinkItem = customMenuSel.append("li")
+            .classed("external-link elm-link", true)
+            .style("display", "none");
+        this.elmLinkItem.append("a")
+            .attr("target", "_blank")
+            .attr("rel", "noopener")
+            .text("Open in ELM");
+
 
         const collapse = customMenuSel.append("li").classed("collapse", true); //.append("button");
         collapse.text("Collapse");
@@ -201,6 +237,7 @@ export class App {
         this.dragElement = null;
         // from where did we start dragging
         this.dragStart = null;//{};
+        this.draggedElement = null;
 
         this.participants = new Map();
         this.allNaryLinks = new Map();
@@ -913,6 +950,7 @@ export class App {
         evt.preventDefault();
         this.d3cola.stop();
         this.dragStart = evt;
+        this.draggedElement = null;
         this.state = App.STATES.SELECT_PAN;
         d3.select(".custom-menu-margin").style("display", "none");
     }
@@ -921,6 +959,7 @@ export class App {
         evt.preventDefault();
         this.d3cola.stop();
         this.dragStart = evt;
+        this.draggedElement = null;
         this.state = App.STATES.SELECT_PAN;
         d3.select(".custom-menu-margin").style("display", "none");
     }
@@ -938,6 +977,7 @@ export class App {
                     const dy = ds.y - c.y;
                     if (this.state === App.STATES.DRAGGING) { // if mouse moved sufficiently to start dragging
                         // console.log("DRAG ACTIVE!");
+                        this.draggedElement = this.dragElement;
                         if (!this.dragElement.ix) { //if is link or complex
                             for (let participant of this.dragElement.participants) {
                                 participant.changePosition(dx, dy);
@@ -983,6 +1023,26 @@ export class App {
                     //     p = this.getEventPoint(this.dragStart);
                     // }
                     this.contextMenuPoint = p.matrixTransform(this.container.getCTM().inverse());
+
+                    // ADD
+                    const uniprotAcc = this.dragElement.uniprotAcc;
+                    const disprotAnno = this.isAnnotationSetRenderable("DisProt")
+                        ? (this.dragElement.annotationSets.get("DisProt") || []).find(a => a.url)
+                        : null;
+                    const alphafoldAnno = this.isAnnotationSetRenderable("AlphaFold")
+                        ? (this.dragElement.annotationSets.get("AlphaFold") || []).find(a => a.url)
+                        : null;
+                    const elmAnno = this.isAnnotationSetRenderable("ELM")
+                        ? (this.dragElement.annotationSets.get("ELM") || []).find(a => a.url)
+                        : null;
+                    this.uniprotLinkItem.style("display", uniprotAcc ? null : "none")
+                        .select("a").attr("href", uniprotAcc ? getExternalLink("UniProt", uniprotAcc) : null);
+                    this.disprotLinkItem.style("display", disprotAnno ? null : "none")
+                        .select("a").attr("href", disprotAnno ? disprotAnno.url : null);
+                    this.alphafoldLinkItem.style("display", alphafoldAnno ? null : "none")
+                        .select("a").attr("href", alphafoldAnno ? alphafoldAnno.url : null);
+                    this.elmLinkItem.style("display", elmAnno ? null : "none")
+                        .select("a").attr("href", elmAnno ? elmAnno.url : null);
                     const menu = d3.select(".custom-menu-margin");
                     let pageX, pageY;
                     if (evt.pageX) {

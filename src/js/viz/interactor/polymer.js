@@ -491,6 +491,21 @@ export class Polymer extends Interactor {
             this.app.preventDefaultsAndStopPropagation(evt);
             this.app.setTooltip(el.name, el.getAttribute("fill"));
             this.showHighlight(true);
+            el.style.cursor = el.linkUrl ? "pointer" : "default";
+        };
+
+        // Opens the source database entry (DisProt, AlphaFold, etc.) for the
+        // clicked feature in a new tab, when that feature carries a url.
+        const linkClickFunc = evt => {
+            const el = (evt.target.correspondingUseElement) ? evt.target.correspondingUseElement : evt.target;
+            if (this.app.draggedElement === this) {
+                this.app.preventDefaultsAndStopPropagation(evt);
+                return;
+            }
+            if (el.linkUrl) {
+                this.app.preventDefaultsAndStopPropagation(evt);
+                window.open(el.linkUrl, "_blank", "noopener");
+            }
         };
 
         let r = -1;
@@ -569,7 +584,9 @@ export class Polymer extends Interactor {
                             anno.fuzzyStart.setAttribute("stroke-width", "1"); // todo - should be css
                             // anno.fuzzyStart.setAttribute("fill-opacity", "0.6");
                             anno.fuzzyStart.name = text;
+                            anno.fuzzyStart.linkUrl = anno.url;
                             anno.fuzzyStart.onmouseover = toolTipFunc;
+                            anno.fuzzyStart.onclick = linkClickFunc;
                             this.annotationsSvgGroup.appendChild(anno.fuzzyStart);
                         }
 
@@ -591,7 +608,9 @@ export class Polymer extends Interactor {
                             anno.certain.setAttribute("stroke-width", "1");
                             // anno.certain.setAttribute("fill-opacity", "0.6");
                             anno.certain.name = text;
+                            anno.certain.linkUrl = anno.url;
                             anno.certain.onmouseover = toolTipFunc;
+                            anno.certain.onclick = linkClickFunc;
                             this.annotationsSvgGroup.appendChild(anno.certain);
                         }
                         if (anno.seqDatum.uncertainEnd) {
@@ -604,7 +623,9 @@ export class Polymer extends Interactor {
                             anno.fuzzyEnd.setAttribute("stroke-width", "1");
                             // anno.fuzzyEnd.setAttribute("fill-opacity", "0.6");
                             anno.fuzzyEnd.name = text;
+                            anno.fuzzyEnd.linkUrl = anno.url;
                             anno.fuzzyEnd.onmouseover = toolTipFunc;
+                            anno.fuzzyEnd.onclick = linkClickFunc;
                             this.annotationsSvgGroup.appendChild(anno.fuzzyEnd);
                         }
                     }

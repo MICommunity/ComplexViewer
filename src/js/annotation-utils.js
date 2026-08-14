@@ -9,6 +9,20 @@ const featureLoaders = new Map([
     ["AlphaFold", getAlphaFoldFeatures]
 ]);
 
+// ADD
+const EXTERNAL_LINK_BUILDERS = {
+    DisProt: (disprotId) => disprotId ? `https://www.disprot.org/${disprotId}` : null,
+    AlphaFold: (acc) => acc ? `https://alphafold.ebi.ac.uk/entry/${acc}` : null,
+    UniProt: (acc) => acc ? `https://www.uniprot.org/uniprotkb/${acc}` : null,
+    ELM: (acc) => acc ? `http://elm.eu.org/combined_search?query=${acc}` : null
+};
+
+export function getExternalLink(source, id) {
+    const builder = EXTERNAL_LINK_BUILDERS[source];
+    return builder ? builder(id) : null;
+}
+
+
 // General and dynamic function to resolve UniProt IDs if they are not standard format
 async function resolveUniProtId(rawId) {
     const uniprotAccRegex = new RegExp("^[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}$", "i");
@@ -56,6 +70,7 @@ function resolveProteinIds(proteins) {
         return resolveUniProtId(rawId).then(mappedId => {
             const match = uniprotAccRegex.exec(mappedId);
             if (match && match[0] === mappedId) {
+                prot.uniprotAcc = mappedId; //ADD
                 return {prot, mappedId};
             }
         });
@@ -203,6 +218,7 @@ async function getDisProtFeatures(prot, id) {
 
         const consensus = data?.['disprot_consensus'];
         const regions = data['regions'] || [];
+        const disprotUrl = getExternalLink("DisProt", data['disprot_id']);
 
         const regionNameMap = new Map(
             regions.map(region => [`${region.term_namespace}:${region.start}-${region.end}`, region.term_name])
@@ -234,7 +250,7 @@ async function getDisProtFeatures(prot, id) {
 
                 for (let feature of features) {
                     const region = `${feature.start}-${feature.end}`;
-                    const anno = new Annotation(namespace, new SequenceDatum(null, region), getDescription(namespace, feature));
+                    const anno = new Annotation(namespace, new SequenceDatum(null, region), getDescription(namespace, feature), disprotUrl);
                     annotations.push(anno);
                 }
             }
@@ -275,6 +291,7 @@ const confidenceToCategory = {
 
 async function getAlphaFoldFeatures(prot, id) {
     const url = `https://disprot.org/api/alphafold/${id}`;
+    const alphaFoldUrl = getExternalLink("AlphaFold", id);
     return d3.json(url).then(json => {
         let annotations = prot.annotationSets.get("AlphaFold");
         if (typeof annotations === "undefined") {
@@ -283,7 +300,7 @@ async function getAlphaFoldFeatures(prot, id) {
         }
 
         for (let reg of json) {
-            const anno = new Annotation(confidenceToCategory[reg.model_confidence], new SequenceDatum(null, `${reg.start}-${reg.end}`));
+            const anno = new Annotation(confidenceToCategory[reg.model_confidence], new SequenceDatum(null, `${reg.start}-${reg.end}`), null, alphaFoldUrl);
             annotations.push(anno);
         }
     });
