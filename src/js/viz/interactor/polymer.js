@@ -502,6 +502,9 @@ export class Polymer extends Interactor {
                 this.app.preventDefaultsAndStopPropagation(evt);
                 return;
             }
+            if (!this.expanded || this.busy) {
+                return; // Collapsed: let the click bubble up to trigger expand, don't open the link
+            }
             if (el.linkUrl) {
                 this.app.preventDefaultsAndStopPropagation(evt);
                 window.open(el.linkUrl, "_blank", "noopener");
