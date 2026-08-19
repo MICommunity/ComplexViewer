@@ -340,19 +340,3 @@ async function getAlphaFoldFeatures(prot, id) {
     });
 }
 
-function decodeHTML(text) {
-    return text.replace(/&([^;]+);/gm, (match, entity) => entities[entity] || match);
-}
-
-const entities = {
-    "amp": "&",
-    "apos": "'",
-    "#x27": "'",
-    "#x2F": "/",
-    "#39": "'",
-    "#47": "/",
-    "lt": "<",
-    "gt": ">",
-    "nbsp": " ",
-    "quot": "\""
-};
