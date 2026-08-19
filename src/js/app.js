@@ -37,6 +37,7 @@ export class App {
             .append("ul");
 
         // External DB links
+        // //-----> Uniprot
         this.uniprotLinkItem = customMenuSel.append("li")
             .classed("external-link uniprot-link", true)
             .style("display", "none");
@@ -44,7 +45,7 @@ export class App {
             .attr("target", "_blank")
             .attr("rel", "noopener")
             .text("Open in UniProt");
-
+        // //-----> DisProt
         this.disprotLinkItem = customMenuSel.append("li")
             .classed("external-link disprot-link", true)
             .style("display", "none");
@@ -52,7 +53,7 @@ export class App {
             .attr("target", "_blank")
             .attr("rel", "noopener")
             .text("Open in DisProt");
-
+        // //-----> Alphafold
         this.alphafoldLinkItem = customMenuSel.append("li")
             .classed("external-link alphafold-link", true)
             .style("display", "none");
@@ -60,8 +61,7 @@ export class App {
             .attr("target", "_blank")
             .attr("rel", "noopener")
             .text("Open in AlphaFold");
-
-        // -----> ELM
+        // //-----> ELM
         this.elmLinkItem = customMenuSel.append("li")
             .classed("external-link elm-link", true)
             .style("display", "none");

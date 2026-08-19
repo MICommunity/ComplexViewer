@@ -10,7 +10,7 @@ const featureLoaders = new Map([
     ["ELM", getELMFeatures]
 ]);
 
-// ADD
+// EXTERNAL DATABASE LINK BUILDERS
 const EXTERNAL_LINK_BUILDERS = {
     DisProt: (disprotId) => disprotId ? `https://www.disprot.org/${disprotId}` : null,
     AlphaFold: (acc) => acc ? `https://alphafold.ebi.ac.uk/entry/${acc}` : null,
