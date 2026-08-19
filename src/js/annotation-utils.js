@@ -15,7 +15,9 @@ const EXTERNAL_LINK_BUILDERS = {
     DisProt: (disprotId) => disprotId ? `https://www.disprot.org/${disprotId}` : null,
     AlphaFold: (acc) => acc ? `https://alphafold.ebi.ac.uk/entry/${acc}` : null,
     UniProt: (acc) => acc ? `https://www.uniprot.org/uniprotkb/${acc}` : null,
-    ELM: (acc) => acc ? `http://elm.eu.org/combined_search?query=${acc}` : null
+    ELM: (acc) => acc ? `http://elm.eu.org/combined_search?query=${acc}` : null,
+    Superfamily: (ssfAcc) => ssfAcc ? `https://supfam.org/SUPERFAMILY/cgi-bin/scop.cgi?ipid=${ssfAcc}` : null
+
 };
 
 export function getExternalLink(source, id) {
@@ -288,29 +290,31 @@ async function getELMFeatures(prot, id) {
 
 //--------> SuperFam
 async function getSuperFamFeatures(prot, id) {
-    const url = `https://supfam.org/SUPERFAMILY/cgi-bin/das/up/features?segment=${id}`;
-    return d3.xml(url).then(xml => {
+    const url = `https://www.ebi.ac.uk/interpro/api/entry/ssf/protein/uniprot/${id}?format=json`;
+    return d3.json(url).then(json => {
         let annotations = prot.annotationSets.get("Superfamily");
         if (typeof annotations === "undefined") {
             annotations = [];
             prot.annotationSets.set("Superfamily", annotations);
         }
-        if (xml) {
-            const xmlFeatures = xml.getElementsByTagName("FEATURE");
-            for (let xmlFeature of xmlFeatures) {
-                const type = xmlFeature.getElementsByTagName("TYPE")[0];
-                const category = type.getAttribute("category");
-                if (category === "miscellaneous") {
-                    const name = decodeHTML(type.getAttribute("id"));
-                    const start = xmlFeature.getElementsByTagName("START")[0].textContent;
-                    const end = xmlFeature.getElementsByTagName("END")[0].textContent;
-                    annotations.push(new Annotation(name, new SequenceDatum(null, `${start}-${end}`)));
+
+        if (!json || !json.results) return;
+
+        for (let entry of json.results) {
+            const ssfAcc = entry.metadata.accession;
+            const name = entry.metadata.name;
+            const ssfUrl = getExternalLink("Superfamily", ssfAcc);
+
+            for (let location of entry.proteins?.[0]?.entry_protein_locations ?? []) {
+                for (let fragment of location.fragments) {
+                    const region = `${fragment.start}-${fragment.end}`;
+                    const anno = new Annotation(name, new SequenceDatum(null, region), null, ssfUrl);
+                    annotations.push(anno);
                 }
             }
         }
     });
 }
-
 //--------> AlphaFold
 const confidenceToCategory = {
     "Very low": "Very low confidence",

@@ -69,6 +69,14 @@ export class App {
             .attr("target", "_blank")
             .attr("rel", "noopener")
             .text("Open in ELM");
+        // //-----> SuperFam
+        this.superfamilyLinkItem = customMenuSel.append("li")
+            .classed("external-link superfamily-link", true)
+            .style("display", "none");
+        this.superfamilyLinkItem.append("a")
+            .attr("target", "_blank")
+            .attr("rel", "noopener")
+            .text("Open in Superfamily");
 
 
         const collapse = customMenuSel.append("li").classed("collapse", true); //.append("button");
@@ -1035,6 +1043,10 @@ export class App {
                     const elmAnno = this.isAnnotationSetRenderable("ELM")
                         ? (this.dragElement.annotationSets.get("ELM") || []).find(a => a.url)
                         : null;
+                    const superfamilyAnno = this.isAnnotationSetRenderable("Superfamily")
+                        ? (this.dragElement.annotationSets.get("Superfamily") || []).find(a => a.url)
+                        : null;
+
                     this.uniprotLinkItem.style("display", uniprotAcc ? null : "none")
                         .select("a").attr("href", uniprotAcc ? getExternalLink("UniProt", uniprotAcc) : null);
                     this.disprotLinkItem.style("display", disprotAnno ? null : "none")
@@ -1043,6 +1055,9 @@ export class App {
                         .select("a").attr("href", alphafoldAnno ? alphafoldAnno.url : null);
                     this.elmLinkItem.style("display", elmAnno ? null : "none")
                         .select("a").attr("href", elmAnno ? elmAnno.url : null);
+                    this.superfamilyLinkItem.style("display", superfamilyAnno ? null : "none")
+                        .select("a").attr("href", superfamilyAnno ? superfamilyAnno.url : null);
+
                     const menu = d3.select(".custom-menu-margin");
                     let pageX, pageY;
                     if (evt.pageX) {
