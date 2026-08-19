@@ -280,7 +280,7 @@ async function getELMFeatures(prot, id) {
         if (!elmData || !elmData.regions) return;
 
         for (let [start, end] of elmData.regions) {
-            const anno = new Annotation("Linear interacting peptide (ELM)", new SequenceDatum(null, `${start}-${end}`), null, elmProteinUrl);
+            const anno = new Annotation("Linear interacting peptide", new SequenceDatum(null, `${start}-${end}`), null, elmProteinUrl);
             annotations.push(anno);
         }
     });
