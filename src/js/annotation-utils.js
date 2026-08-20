@@ -191,6 +191,7 @@ function notifyAnnotationSetFinished(app, loadId, annotationSet, progress, total
 //--------> UniProtKB
 function getUniProtFeatures(prot, id) {
     const url = `https://www.ebi.ac.uk/proteins/api/proteins/${id}`;
+    const domainUrl = `https://www.uniprot.org/uniprotkb/${id}/entry#family_and_domains`;
     return d3.json(url).then(json => {
         let annotations = prot.annotationSets.get("UniprotKB");
         if (typeof annotations === "undefined") {
@@ -199,7 +200,7 @@ function getUniProtFeatures(prot, id) {
         }
         if (json && json.features) {
             for (let feature of json.features.filter(ft => ft.type === "DOMAIN")) {
-                const anno = new Annotation(feature.description, new SequenceDatum(null, `${feature.begin}-${feature.end}`));
+                const anno = new Annotation(feature.description, new SequenceDatum(null, `${feature.begin}-${feature.end}`), null, domainUrl);
                 annotations.push(anno);
             }
         }
