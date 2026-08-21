@@ -671,7 +671,7 @@ export class App {
     resetAnnotationSetLoadingState() {
         this.annotationSetsLoaded.set("Interactor", true);
         this.annotationSetsLoaded.set("MI Features", true);
-        ["UniprotKB", "Superfamily", "AlphaFold", "DisProt", "ELM"]
+        ["UniprotKB", "InterPro", "AlphaFold", "DisProt", "ELM"]
             .forEach(annotationSet => this.annotationSetsLoaded.set(annotationSet, false));
     }
 
