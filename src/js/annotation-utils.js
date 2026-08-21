@@ -17,7 +17,7 @@ const EXTERNAL_LINK_BUILDERS = {
     AlphaFold: (acc) => acc ? `https://alphafold.ebi.ac.uk/entry/${acc}` : null,
     UniProt: (acc) => acc ? `https://www.uniprot.org/uniprotkb/${acc}` : null,
     ELM: (acc) => acc ? `http://elm.eu.org/combined_search?query=${acc}` : null,
-    //Superfamily: (ssfAcc) => ssfAcc ? `https://supfam.org/SUPERFAMILY/cgi-bin/scop.cgi?ipid=${ssfAcc}` : null,
+    //Superfamily: (acc) => acc ? `https://supfam.org/SUPERFAMILY/cgi-bin/scop.cgi?ipid=${acc}` : null,
     InterPro: (acc) => acc ? `https://www.ebi.ac.uk/interpro/protein/UniProt/${acc}/` : null
 
 };
