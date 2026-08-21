@@ -6,6 +6,10 @@ const common = require("./webpack.common.js");
 module.exports = merge(common, {
     mode: "development",
     devtool: "source-map",
+    watch: true,
+    watchOptions: {
+        ignored: /node_modules/
+    },
     module: {
         rules: [
             // {
@@ -17,7 +21,8 @@ module.exports = merge(common, {
     },
     devServer: {
         contentBase: path.join(__dirname),
-        compress: true,
+        watchFiles:["src/**/*"], // to detect changes on all files inside src directory
+        compress: false,
         port: 9000
     }
 });

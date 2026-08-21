@@ -9,6 +9,29 @@
     <link href="./css/reset.css" rel="stylesheet" type='text/css'>
     <link href="./css/style.css" rel="stylesheet" type='text/css'>
     <link href="./css/demo.css" rel="stylesheet" type='text/css'>
+    <style>
+        /**
+         * Annotation loading progress bar
+         */
+        .annotation-progress {
+            display: inline-block;
+            width: 42px;
+            height: 6px;
+            margin-right: 4px;
+            overflow: hidden;
+            background: #dddddd;
+            border: 1px solid #b8b8b8;
+            vertical-align: 1px;
+        }
+
+        .annotation-progress-bar {
+            display: block;
+            width: 0;
+            height: 100%;
+            background: #555555;
+            transition: width 120ms linear;
+        }
+    </style>
     <!--libraries-->
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.2.2/d3.v3.min.js"></script>
     <script src="./dist/complexviewer.js" type="text/javascript"></script>
@@ -100,10 +123,26 @@
                                autocomplete="off"
                                onchange="setAnnotations(this);">
                         <label for="uniprotkb"> UniprotKB Domains</label>
-                        <input type="checkbox" id="superfamily" name="superfamily" value="Superfamily"
+                        <input type="checkbox" id="interpro" name="interpro" value="InterPro"
                                autocomplete="off"
                                onchange="setAnnotations(this);">
-                        <label for="superfamily"> Superfamily</label>
+                        <label for="interpro"> InterPro Domains</label>
+<!--                        <input type="checkbox" id="superfamily" name="superfamily" value="Superfamily"-->
+<!--                               autocomplete="off"-->
+<!--                               onchange="setAnnotations(this);">-->
+<!--                        <label for="superfamily"> Superfamily</label>-->
+                        <input type="checkbox" id="disprot" name="disprot" value="DisProt"
+                               autocomplete="off"
+                               onchange="setAnnotations(this);">
+                        <label for="disprot"> DisProt</label>
+                        <input type="checkbox" id="alphafold" name="alphafold" value="AlphaFold"
+                                autocomplete="off" checked
+                                onchange="setAnnotations(this);">
+                        <label for="alphafold"> AlphaFold</label>
+                        <input type="checkbox" id="elm" name="elm" value="ELM"
+                               autocomplete="off"
+                               onchange="setAnnotations(this);">
+                        <label for="elm"> ELM</label>
                         <input type="checkbox" id="interactor" name="interactor" value="Interactor"
                                autocomplete="off"
                                onchange="setAnnotations(this);">
@@ -125,15 +164,15 @@
 
     <div class="logo-bar space-between">
         <a class="logo" href="https://rappsilberlab.org/" target="_blank"><img src="images/logos/rappsilber-logo.png"
-                                                                              alt="Rappsilber Laboratory"></a>
+                                                                               alt="Rappsilber Laboratory"></a>
         <a class="logo" href="https://www.ed.ac.uk/" target="_blank"><img src="./images/logos/eduni.jpeg"
-                                                                         alt="Edinburgh University"></a>
+                                                                          alt="Edinburgh University"></a>
         <a class="logo" href="https://www.wcb.ed.ac.uk/" target="_blank"><img src="images/logos/wtccb.png"
-                                                                             alt="Wellcome Trust Centre for Cell Biology"></a>
+                                                                              alt="Wellcome Trust Centre for Cell Biology"></a>
         <a class="logo" href="https://www.ebi.ac.uk/" target="_blank"><img src="images/logos/ebi-logo.jpeg"
-                                                                          alt="European Bioinformatics Institute"></a>
+                                                                           alt="European Bioinformatics Institute"></a>
         <a class="logo" href="https://intermine.org/" target="_blank"><img src="./images/logos/intermine.png"
-                                                                          alt="Intermine"></a>
+                                                                           alt="Intermine"></a>
         <a class="logo" href="https://www.cam.ac.uk/" target="_blank"><img src="./images/logos/cambridge-blue.png"
                                                                            alt="Cambridge University"></a>
     </div>
@@ -153,7 +192,7 @@
     }
 
     const networkTargetDiv = document.getElementById("networkDiv");
-    cv = new complexviewer.App(networkTargetDiv);
+    cv = new complexviewer.App(networkTargetDiv, {maxCountInitiallyExpanded: 4, initialAnnotations: ['MI Features', 'AlphaFold']});
 
     //hover listener example
     // cv.addHoverListener(function (participantArr) {
@@ -165,10 +204,25 @@
         console.log("EXPANDED: ", participantArr);
     });
 
+    cv.addAnnotationListener(function (event) {
+        console.log("ANNOTATION: ", event);
+        if (event.type === "annotation-loading-start") {
+            setAnnotationControlLoading(event.annotationSet, true, 0, event.total);
+        } else if (event.type === "annotation-protein-loaded") {
+            setAnnotationControlLoading(event.annotationSet, true, event.completed, event.total);
+        } else if (event.type === "annotation-loading-finish") {
+            setAnnotationControlLoading(event.annotationSet, false, event.completed, event.total);
+        }
+        if (!event.loading) {
+             makeLegend(cv.getColorKeyJson());
+        }
+    });
+
     loadData();
 
     function loadData() {
         cv.clear();
+        resetAnnotationLoadingControls();
         const dataSetsSelect = document.getElementById("dataSets");
         const path = `./data/${dataSetsSelect.options[dataSetsSelect.selectedIndex].value}.json`;
         d3.json(path, function (data) {
@@ -179,8 +233,52 @@
 
     function setAnnotations(checkbox) {
         const json = cv.showAnnotations(checkbox.value, checkbox.checked);
-        console.log(json);
         makeLegend(json);
+    }
+
+    function getAnnotationCheckbox(annotationSet) {
+        const inputs = document.querySelectorAll("input[type='checkbox']");
+        for (let input of inputs) {
+            if (input.value === annotationSet) {
+                return input;
+            }
+        }
+    }
+
+    function setAnnotationControlLoading(annotationSet, loading, completed, total) {
+        const checkbox = getAnnotationCheckbox(annotationSet);
+        if (!checkbox) return;
+
+        const label = document.querySelector(`label[for='${checkbox.id}']`);
+        checkbox.disabled = loading;
+        if (label) {
+            label.setAttribute("aria-busy", loading ? "true" : "false");
+            let progress = label.querySelector(".annotation-progress");
+            if (loading && !progress) {
+                progress = document.createElement("span");
+                progress.className = "annotation-progress";
+                progress.setAttribute("aria-hidden", "true");
+
+                const progressBar = document.createElement("span");
+                progressBar.className = "annotation-progress-bar";
+                progress.appendChild(progressBar);
+                label.prepend(progress);
+            }
+            if (loading && progress) {
+                const progressBar = progress.querySelector(".annotation-progress-bar");
+                const percent = total > 0 ? Math.min(100, Math.round((completed || 0) / total * 100)) : 100;
+                progressBar.style.width = `${percent}%`;
+            } else if (!loading && progress) {
+                progress.remove();
+            }
+        }
+    }
+
+    function resetAnnotationLoadingControls() {
+        const inputs = document.querySelectorAll("input[type='checkbox']");
+        for (let input of inputs) {
+            setAnnotationControlLoading(input.value, false);
+        }
     }
 
     // you can use code below as template to make legend from json
@@ -201,19 +299,17 @@
                     tc1.style.width = "45px";
                     const tc2 = tr.insertCell();
                     const color = legendEntry.uncertain.color
-                    tc2.style.background = "repeating-linear-gradient(45deg, #ffffff, #ffffff 6px, "+color+" 6px, "+color+" 12px)";
+                    tc2.style.background = "repeating-linear-gradient(45deg, #ffffff, #ffffff 6px, " + color + " 6px, " + color + " 12px)";
                     tc2.style.width = "45px";
-                }
-                else if (legendEntry.certain) {
+                } else if (legendEntry.certain) {
                     const tc1 = tr.insertCell();
                     tc1.style.backgroundColor = legendEntry.certain.color;
                     tc1.style.width = "90px";
                     tc1.colSpan = 2;
-                }
-                else if (legendEntry.uncertain) {
+                } else if (legendEntry.uncertain) {
                     const tc1 = tr.insertCell();
                     const color = legendEntry.uncertain.color
-                    tc1.style.background = "repeating-linear-gradient(45deg, #ffffff, #ffffff 6px, "+color+" 6px, "+color+" 12px)";
+                    tc1.style.background = "repeating-linear-gradient(45deg, #ffffff, #ffffff 6px, " + color + " 6px, " + color + " 12px)";
                     tc1.style.width = "90px";
                     tc1.colSpan = 2;
                 }

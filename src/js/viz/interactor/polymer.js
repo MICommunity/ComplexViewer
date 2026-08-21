@@ -217,7 +217,7 @@ export class Polymer extends Interactor {
         const cubicInOut = easeCubicInOut;
         if (transition) {
             for (let [annotationType, annotations] of this.annotationSets) {
-                if (this.app.annotationSetsShown.get(annotationType) === true) {
+                if (this.app.isAnnotationSetRenderable(annotationType)) {
                     for (let anno of annotations) {
                         if (anno.fuzzyStart) {
                             const fuzzyStart = anno.fuzzyStart;
@@ -262,7 +262,7 @@ export class Polymer extends Interactor {
                 self.checkLinks();
 
                 for (let [annotationType, annotations] of self.annotationSets) {
-                    if (self.app.annotationSetsShown.get(annotationType) === true) {
+                    if (self.app.isAnnotationSetRenderable(annotationType)) {
                         for (let anno of annotations) {
                             if (anno.fuzzyStart) {
                                 const fuzzyStart = anno.fuzzyStart;
@@ -338,7 +338,7 @@ export class Polymer extends Interactor {
         const cubicInOut = easeCubicInOut;
         if (transition) {
             for (let [annotationType, annotations] of this.annotationSets) {
-                if (this.app.annotationSetsShown.get(annotationType) === true) {
+                if (this.app.isAnnotationSetRenderable(annotationType)) {
                     for (let anno of annotations) {
                         if (anno.fuzzyStart) {
                             const fuzzyStart = anno.fuzzyStart;
@@ -408,7 +408,7 @@ export class Polymer extends Interactor {
 
     updateAnnotationRectanglesNoTransition() {
         for (let [annotationType, annotations] of this.annotationSets) {
-            if (this.app.annotationSetsShown.get(annotationType) === true) {
+            if (this.app.isAnnotationSetRenderable(annotationType)) {
                 for (let anno of annotations) {
                     if (anno.fuzzyStart) {
                         const fuzzyStart = anno.fuzzyStart;
@@ -491,6 +491,24 @@ export class Polymer extends Interactor {
             this.app.preventDefaultsAndStopPropagation(evt);
             this.app.setTooltip(el.name, el.getAttribute("fill"));
             this.showHighlight(true);
+            el.style.cursor = el.linkUrl ? "pointer" : "default";
+        };
+
+        // Opens the source database entry (DisProt, AlphaFold, etc.) for the
+        // clicked feature in a new tab, when that feature carries a url.
+        const linkClickFunc = evt => {
+            const el = (evt.target.correspondingUseElement) ? evt.target.correspondingUseElement : evt.target;
+            if (this.app.draggedElement === this) {
+                this.app.preventDefaultsAndStopPropagation(evt);
+                return;
+            }
+            if (!this.expanded || this.busy) {
+                return; // Collapsed: let the click bubble up to trigger expand, don't open the link
+            }
+            if (el.linkUrl) {
+                this.app.preventDefaultsAndStopPropagation(evt);
+                window.open(el.linkUrl, "_blank", "noopener");
+            }
         };
 
         let r = -1;
@@ -506,7 +524,7 @@ export class Polymer extends Interactor {
         }
 
         for (let [annotationType, annotations] of this.annotationSets) {
-            if (this.app.annotationSetsShown.get(annotationType) === true) {
+            if (this.app.isAnnotationSetRenderable(annotationType)) {
                 if (annotations && annotations.length > 0) {
                     r++;
                     rungs[r] = [];
@@ -514,8 +532,8 @@ export class Polymer extends Interactor {
                 const dupCheck = new Set();
                 //need to sort by description
                 const sortedAnnos = Array.from(annotations.values()).sort(function (a, b) {
-                    const nameA = a.description;
-                    const nameB = b.description;
+                    const nameA = a.category;
+                    const nameB = b.category;
                     if (nameA < nameB) {
                         return -1;
                     }
@@ -553,7 +571,7 @@ export class Polymer extends Interactor {
         this.rungCount = r + 1;
 
         for (let [annotationType, annotations] of this.annotationSets) {
-            if (this.app.annotationSetsShown.get(annotationType) === true) {
+            if (this.app.isAnnotationSetRenderable(annotationType)) {
                 const dupCheck = new Set();
                 for (let anno of annotations.values()) {
                     if (!dupCheck.has(anno.toString())) {
@@ -561,20 +579,23 @@ export class Polymer extends Interactor {
                         let text = anno.toString();
                         if (anno.seqDatum.uncertainBegin) {
                             anno.fuzzyStart = document.createElementNS(svgns, "path");
+                            anno.fuzzyStart.setAttribute("class", "annotation fuzzy start");
                             if (!this.expanded) {
                                 anno.fuzzyStart.setAttribute("d", this.getAnnotationPieSlicePath(anno.seqDatum.uncertainBegin, anno.seqDatum.begin, anno));
                             } else {
                                 anno.fuzzyStart.setAttribute("d", this.getAnnotationRectPath(anno.seqDatum.uncertainBegin, anno.seqDatum.begin, anno));
                             }
-                            anno.fuzzyStart.setAttribute("stroke-width", "1"); // todo - should be css
-                            // anno.fuzzyStart.setAttribute("fill-opacity", "0.6");
                             anno.fuzzyStart.name = text;
+                            anno.fuzzyStart.linkUrl = anno.url;
                             anno.fuzzyStart.onmouseover = toolTipFunc;
+                            anno.fuzzyStart.onclick = linkClickFunc;
                             this.annotationsSvgGroup.appendChild(anno.fuzzyStart);
                         }
 
                         if (anno.seqDatum.begin && anno.seqDatum.end) {
                             anno.certain = document.createElementNS(svgns, "path");
+                            anno.certain.setAttribute("class", "annotation certain");
+
                             let tempBegin = anno.seqDatum.begin; //todo - might be better to have seperate att in SequenceData for end of uncertain start
                             let tempEnd = anno.seqDatum.end;
                             if (anno.seqDatum.uncertainBegin) {
@@ -588,23 +609,25 @@ export class Polymer extends Interactor {
                             } else {
                                 anno.certain.setAttribute("d", this.getAnnotationRectPath(tempBegin, tempEnd, anno));
                             }
-                            anno.certain.setAttribute("stroke-width", "1");
-                            // anno.certain.setAttribute("fill-opacity", "0.6");
                             anno.certain.name = text;
+                            anno.certain.linkUrl = anno.url;
                             anno.certain.onmouseover = toolTipFunc;
+                            anno.certain.onclick = linkClickFunc;
                             this.annotationsSvgGroup.appendChild(anno.certain);
                         }
                         if (anno.seqDatum.uncertainEnd) {
                             anno.fuzzyEnd = document.createElementNS(svgns, "path");
+                            anno.fuzzyEnd.setAttribute("class", "annotation fuzzy end");
+
                             if (!this.expanded) {
                                 anno.fuzzyEnd.setAttribute("d", this.getAnnotationPieSlicePath(anno.seqDatum.end, anno.seqDatum.uncertainEnd, anno));
                             } else {
                                 anno.fuzzyEnd.setAttribute("d", this.getAnnotationRectPath(anno.seqDatum.end, anno.seqDatum.uncertainEnd, anno));
                             }
-                            anno.fuzzyEnd.setAttribute("stroke-width", "1");
-                            // anno.fuzzyEnd.setAttribute("fill-opacity", "0.6");
                             anno.fuzzyEnd.name = text;
+                            anno.fuzzyEnd.linkUrl = anno.url;
                             anno.fuzzyEnd.onmouseover = toolTipFunc;
+                            anno.fuzzyEnd.onclick = linkClickFunc;
                             this.annotationsSvgGroup.appendChild(anno.fuzzyEnd);
                         }
                     }
@@ -641,8 +664,8 @@ export class Polymer extends Interactor {
             startAngle = 0;
             endAngle = +20;
         } else {
-            startAngle = ((startRes - 1) / this.size) * 360;
-            endAngle = ((endRes - 1) / this.size) * 360;
+            startAngle = ((startRes - 1.5) / this.size) * 360;
+            endAngle = ((endRes - 0.5) / this.size) * 360;
         }
 
         let largeArch = 0;

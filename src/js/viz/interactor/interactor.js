@@ -91,6 +91,7 @@ export class Interactor {
         this.app.d3cola.stop();
         this.app.dragElement = this;
         this.app.dragStart = evt;
+        this.app.draggedElement = null;
         return false;
     }
 
@@ -99,6 +100,7 @@ export class Interactor {
         this.app.d3cola.stop();
         this.app.dragElement = this;
         this.app.dragStart = evt;
+        this.app.draggedElement = null;
         return false;
     }
 

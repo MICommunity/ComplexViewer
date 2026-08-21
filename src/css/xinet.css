@@ -186,6 +186,14 @@ svg {
     stroke-width: 1;
 }
 
+.annotation {
+    stroke-width: 0;
+}
+
+.annotation.fuzzy {
+    stroke-width: 1;
+}
+
 @media only screen and (max-width: 1140px) {
     .label {
         text-shadow: none;
