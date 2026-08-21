@@ -18,6 +18,11 @@ import $ from "jquery";
 
 const defaultMaxCountInitiallyExpanded = 4;
 const defaultInitialAnnotations = ["MI Features"];
+const ANNOTATION_SET_LABELS = {
+    "InterPro": "InterPro Domains",
+    "UniprotKB": "UniprotKB Domains"
+};
+
 export class App {
 
     constructor(/*HTMLDivElement*/networkDiv, {maxCountInitiallyExpanded = defaultMaxCountInitiallyExpanded , initialAnnotations = defaultInitialAnnotations}) {
@@ -69,14 +74,22 @@ export class App {
             .attr("target", "_blank")
             .attr("rel", "noopener")
             .text("Open in ELM");
-        // //-----> SuperFam
-        this.superfamilyLinkItem = customMenuSel.append("li")
-            .classed("external-link superfamily-link", true)
+        // //-----> InterPro
+        this.interproLinkItem = customMenuSel.append("li")
+            .classed("external-link interpro-link", true)
             .style("display", "none");
-        this.superfamilyLinkItem.append("a")
+        this.interproLinkItem.append("a")
             .attr("target", "_blank")
             .attr("rel", "noopener")
-            .text("Open in Superfamily");
+            .text("Open in InterPro");
+        // //-----> SuperFam
+        // this.superfamilyLinkItem = customMenuSel.append("li")
+        //     .classed("external-link superfamily-link", true)
+        //     .style("display", "none");
+        // this.superfamilyLinkItem.append("a")
+        //     .attr("target", "_blank")
+        //     .attr("rel", "noopener")
+        //     .text("Open in Superfamily");
 
 
         const collapse = customMenuSel.append("li").classed("collapse", true); //.append("button");
@@ -221,7 +234,7 @@ export class App {
         this.svgElement.appendChild(this.tooltip);
 
         this.annotationSetsShown = new Map();
-        ["Interactor", "UniprotKB", "Superfamily", "AlphaFold", "DisProt", "ELM", "MI Features"]
+        ["Interactor", "UniprotKB", "InterPro", "AlphaFold", "DisProt", "ELM", "MI Features"]
             .forEach(a => this.annotationSetsShown.set(a, initialAnnotations.includes(a)));
         this.annotationSetsLoaded = new Map();
         this.resetAnnotationSetLoadingState();
@@ -851,7 +864,8 @@ export class App {
                             }
                         }
                     }
-                    json[annotationSet] = featureTypes;
+                    const label = ANNOTATION_SET_LABELS[annotationSet] || annotationSet;
+                    json[label] = featureTypes;
                 }
             }
         }
@@ -1043,8 +1057,11 @@ export class App {
                     const elmAnno = this.isAnnotationSetRenderable("ELM")
                         ? (this.dragElement.annotationSets.get("ELM") || []).find(a => a.url)
                         : null;
-                    const superfamilyAnno = this.isAnnotationSetRenderable("Superfamily")
-                        ? (this.dragElement.annotationSets.get("Superfamily") || []).find(a => a.url)
+                    //const superfamilyAnno = this.isAnnotationSetRenderable("Superfamily")
+                    //    ? (this.dragElement.annotationSets.get("Superfamily") || []).find(a => a.url)
+                    //    : null;
+                    const interproAnno = this.isAnnotationSetRenderable("InterPro")
+                        ? (this.dragElement.annotationSets.get("InterPro") || []).find(a => a.url)
                         : null;
 
                     this.uniprotLinkItem.style("display", uniprotAcc ? null : "none")
@@ -1055,8 +1072,10 @@ export class App {
                         .select("a").attr("href", alphafoldAnno ? alphafoldAnno.url : null);
                     this.elmLinkItem.style("display", elmAnno ? null : "none")
                         .select("a").attr("href", elmAnno ? elmAnno.url : null);
-                    this.superfamilyLinkItem.style("display", superfamilyAnno ? null : "none")
-                        .select("a").attr("href", superfamilyAnno ? superfamilyAnno.url : null);
+                    this.interproLinkItem.style("display", interproAnno ? null : "none")
+                        .select("a").attr("href", interproAnno ? interproAnno.url : null);
+                    //this.superfamilyLinkItem.style("display", superfamilyAnno ? null : "none")
+                    //    .select("a").attr("href", superfamilyAnno ? superfamilyAnno.url : null);
 
                     const menu = d3.select(".custom-menu-margin");
                     let pageX, pageY;

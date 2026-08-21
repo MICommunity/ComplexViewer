@@ -3,7 +3,8 @@ import {Annotation} from "./viz/interactor/annotation";
 import {SequenceDatum} from "./viz/sequence-datum";
 
 const featureLoaders = new Map([
-    ["Superfamily", getSuperFamFeatures],
+    //["Superfamily", getSuperFamFeatures],
+    ["InterPro", getInterProFeatures],
     ["UniprotKB", getUniProtFeatures],
     ["DisProt", getDisProtFeatures],
     ["AlphaFold", getAlphaFoldFeatures],
@@ -16,7 +17,8 @@ const EXTERNAL_LINK_BUILDERS = {
     AlphaFold: (acc) => acc ? `https://alphafold.ebi.ac.uk/entry/${acc}` : null,
     UniProt: (acc) => acc ? `https://www.uniprot.org/uniprotkb/${acc}` : null,
     ELM: (acc) => acc ? `http://elm.eu.org/combined_search?query=${acc}` : null,
-    Superfamily: (ssfAcc) => ssfAcc ? `https://supfam.org/SUPERFAMILY/cgi-bin/scop.cgi?ipid=${ssfAcc}` : null
+    //Superfamily: (ssfAcc) => ssfAcc ? `https://supfam.org/SUPERFAMILY/cgi-bin/scop.cgi?ipid=${ssfAcc}` : null,
+    InterPro: (acc) => acc ? `https://www.ebi.ac.uk/interpro/protein/UniProt/${acc}/` : null
 
 };
 
@@ -289,32 +291,70 @@ async function getELMFeatures(prot, id) {
     });
 }
 
-//--------> SuperFam
-async function getSuperFamFeatures(prot, id) {
-    const url = `https://www.ebi.ac.uk/interpro/api/entry/ssf/protein/uniprot/${id}?format=json`;
-    return d3.json(url).then(json => {
-        let annotations = prot.annotationSets.get("Superfamily");
-        if (typeof annotations === "undefined") {
-            annotations = [];
-            prot.annotationSets.set("Superfamily", annotations);
-        }
+// //--------> SuperFam
+// async function getSuperFamFeatures(prot, id) {
+//     const url = `https://www.ebi.ac.uk/interpro/api/entry/ssf/protein/uniprot/${id}?format=json`;
+//     return d3.json(url).then(json => {
+//         let annotations = prot.annotationSets.get("Superfamily");
+//         if (typeof annotations === "undefined") {
+//             annotations = [];
+//             prot.annotationSets.set("Superfamily", annotations);
+//         }
+//
+//         if (!json || !json.results) return;
+//
+//         for (let entry of json.results) {
+//             const ssfAcc = entry.metadata.accession;
+//             const name = entry.metadata.name;
+//             const ssfUrl = getExternalLink("Superfamily", ssfAcc);
+//
+//             for (let location of entry.proteins?.[0]?.entry_protein_locations ?? []) {
+//                 for (let fragment of location.fragments) {
+//                     const region = `${fragment.start}-${fragment.end}`;
+//                     const anno = new Annotation(name, new SequenceDatum(null, region), null, ssfUrl);
+//                     annotations.push(anno);
+//                 }
+//             }
+//         }
+//     });
+// }
 
-        if (!json || !json.results) return;
 
-        for (let entry of json.results) {
-            const ssfAcc = entry.metadata.accession;
-            const name = entry.metadata.name;
-            const ssfUrl = getExternalLink("Superfamily", ssfAcc);
+//--------> InterPro Domains
+async function getInterProFeatures(prot, id) {
+    let annotations = prot.annotationSets.get("InterPro");
+    if (typeof annotations === "undefined") {
+        annotations = [];
+        prot.annotationSets.set("InterPro", annotations);
+    }
 
-            for (let location of entry.proteins?.[0]?.entry_protein_locations ?? []) {
-                for (let fragment of location.fragments) {
-                    const region = `${fragment.start}-${fragment.end}`;
-                    const anno = new Annotation(name, new SequenceDatum(null, region), null, ssfUrl);
-                    annotations.push(anno);
-                }
+    const url = getExternalLink("InterPro", id);
+    let nextUrl = `https://www.ebi.ac.uk/interpro/api/entry/all/protein/uniprot/${id}?format=json`;
+
+    while (nextUrl) {
+        const json = await d3.json(nextUrl);
+        if (!json || !json.results) break;
+
+        const filtered = json.results.filter(a =>
+            ["repeat", "domain", "homologous_superfamily"].includes(a.metadata.type)
+        );
+
+        for (let entry of filtered) {
+            const name = entry.metadata.name || `Unnamed (${entry.metadata.accession})`;
+
+            const ranges = entry.proteins.flatMap(p =>
+                (p.entry_protein_locations ?? [])
+                    .filter(l => l.representative)
+                    .flatMap(l => l.fragments.map(f => `${f.start}-${f.end}`))
+            );
+            for (let region of ranges) {
+                const anno = new Annotation(name, new SequenceDatum(null, region), null, url);
+                annotations.push(anno);
             }
         }
-    });
+
+        nextUrl = json.next || null;
+    }
 }
 //--------> AlphaFold
 const confidenceToCategory = {
