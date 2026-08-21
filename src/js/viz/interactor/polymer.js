@@ -579,13 +579,12 @@ export class Polymer extends Interactor {
                         let text = anno.toString();
                         if (anno.seqDatum.uncertainBegin) {
                             anno.fuzzyStart = document.createElementNS(svgns, "path");
+                            anno.fuzzyStart.setAttribute("class", "annotation fuzzy start");
                             if (!this.expanded) {
                                 anno.fuzzyStart.setAttribute("d", this.getAnnotationPieSlicePath(anno.seqDatum.uncertainBegin, anno.seqDatum.begin, anno));
                             } else {
                                 anno.fuzzyStart.setAttribute("d", this.getAnnotationRectPath(anno.seqDatum.uncertainBegin, anno.seqDatum.begin, anno));
                             }
-                            anno.fuzzyStart.setAttribute("stroke-width", "1"); // todo - should be css
-                            // anno.fuzzyStart.setAttribute("fill-opacity", "0.6");
                             anno.fuzzyStart.name = text;
                             anno.fuzzyStart.linkUrl = anno.url;
                             anno.fuzzyStart.onmouseover = toolTipFunc;
@@ -595,6 +594,8 @@ export class Polymer extends Interactor {
 
                         if (anno.seqDatum.begin && anno.seqDatum.end) {
                             anno.certain = document.createElementNS(svgns, "path");
+                            anno.certain.setAttribute("class", "annotation certain");
+
                             let tempBegin = anno.seqDatum.begin; //todo - might be better to have seperate att in SequenceData for end of uncertain start
                             let tempEnd = anno.seqDatum.end;
                             if (anno.seqDatum.uncertainBegin) {
@@ -608,8 +609,6 @@ export class Polymer extends Interactor {
                             } else {
                                 anno.certain.setAttribute("d", this.getAnnotationRectPath(tempBegin, tempEnd, anno));
                             }
-                            anno.certain.setAttribute("stroke-width", "1");
-                            // anno.certain.setAttribute("fill-opacity", "0.6");
                             anno.certain.name = text;
                             anno.certain.linkUrl = anno.url;
                             anno.certain.onmouseover = toolTipFunc;
@@ -618,13 +617,13 @@ export class Polymer extends Interactor {
                         }
                         if (anno.seqDatum.uncertainEnd) {
                             anno.fuzzyEnd = document.createElementNS(svgns, "path");
+                            anno.fuzzyEnd.setAttribute("class", "annotation fuzzy end");
+
                             if (!this.expanded) {
                                 anno.fuzzyEnd.setAttribute("d", this.getAnnotationPieSlicePath(anno.seqDatum.end, anno.seqDatum.uncertainEnd, anno));
                             } else {
                                 anno.fuzzyEnd.setAttribute("d", this.getAnnotationRectPath(anno.seqDatum.end, anno.seqDatum.uncertainEnd, anno));
                             }
-                            anno.fuzzyEnd.setAttribute("stroke-width", "1");
-                            // anno.fuzzyEnd.setAttribute("fill-opacity", "0.6");
                             anno.fuzzyEnd.name = text;
                             anno.fuzzyEnd.linkUrl = anno.url;
                             anno.fuzzyEnd.onmouseover = toolTipFunc;
@@ -665,8 +664,8 @@ export class Polymer extends Interactor {
             startAngle = 0;
             endAngle = +20;
         } else {
-            startAngle = ((startRes - 1) / this.size) * 360;
-            endAngle = ((endRes - 1) / this.size) * 360;
+            startAngle = ((startRes - 1.5) / this.size) * 360;
+            endAngle = ((endRes - 0.5) / this.size) * 360;
         }
 
         let largeArch = 0;
