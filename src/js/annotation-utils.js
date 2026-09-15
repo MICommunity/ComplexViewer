@@ -67,14 +67,16 @@ function getProteins(app) {
 }
 
 function resolveProteinIds(proteins) {
-    const uniprotAccRegex = new RegExp("[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}![-]", "i");
+    const uniprotAccRegex = new RegExp(
+        "^[OPQ][0-9][A-Z0-9]{3}[0-9](-\\d+)?$|^[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}(-\\d+)?$",
+        "i"
+    );
     return proteins.map(prot => {
         const rawId = prot.json?.identifier?.id?.trim();
         if (!rawId) return Promise.resolve();
 
         return resolveUniProtId(rawId).then(mappedId => {
-            const match = uniprotAccRegex.exec(mappedId);
-            if (match && match[0] === mappedId) {
+            if (uniprotAccRegex.test(mappedId)) {
                 prot.uniprotAcc = mappedId; //ADD
                 return {prot, mappedId};
             }
