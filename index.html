@@ -54,6 +54,8 @@
         <div class="top-bar">
             <label for="dataSets">Example:</label>
             <select id="dataSets" onChange="loadData();"></select>
+            <input type="file" id="fileInput" class="json-file-input" accept=".json,application/json"
+                   aria-label="Load a JSON file" onchange="loadDataFromFile(event);">
         </div>
     </div>
 
@@ -229,6 +231,25 @@
             cv.readMIJSON(data);
             makeLegend(cv.getColorKeyJson());
         });
+    }
+
+    async function loadDataFromFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        try {
+            const data = JSON.parse(await file.text());
+            cv.clear();
+            resetAnnotationLoadingControls();
+            cv.readMIJSON(data);
+            makeLegend(cv.getColorKeyJson());
+        } catch (error) {
+            console.error(`Could not load ${file.name}:`, error);
+            alert(`Could not load ${file.name}. Please select a valid MI-JSON file.`);
+        } finally {
+            // Allow selecting the same file again after it has changed or failed to load.
+            event.target.value = "";
+        }
     }
 
     function setAnnotations(checkbox) {
