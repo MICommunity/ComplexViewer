@@ -76,6 +76,45 @@ body, input, select, textarea, button {
     color: #fff;
 }
 
+.json-file-input {
+    width: 260px;
+    margin-left: 10px;
+    padding: 2px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.5em;
+    cursor: pointer;
+    transition: border-color .2s, background-color .2s, box-shadow .2s;
+}
+
+.json-file-input:hover,
+.json-file-input:focus {
+    border-color: #fff;
+    background: rgba(255, 255, 255, 0.18);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
+    outline: none;
+}
+
+.json-file-input::file-selector-button {
+    margin-right: 9px;
+    padding: 2px 10px;
+    border: 0;
+    border-radius: 3px;
+    background: #fff;
+    color: #091D42;
+    font: inherit;
+    line-height: 1.5em;
+    cursor: pointer;
+    transition: background-color .2s, color .2s;
+}
+
+.json-file-input::file-selector-button:hover {
+    background: #dce7f7;
+}
+
 .controls {
     background-color: #091D42;
     color: #fff;
