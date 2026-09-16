@@ -678,11 +678,20 @@ export class Polymer extends Interactor {
         const p3 = rotatePointAboutPoint([0, top], [0, 0], endAngle - 180);
         const p4 = rotatePointAboutPoint([0, bottom], [0, 0], endAngle - 180);
 
+        // A single SVG arc whose endpoints coincide does not draw a complete
+        // circle. Split protein-wide annotations into two arcs so they remain
+        // visible when the protein is collapsed.
+        const fullCircle = Math.abs(endAngle - startAngle) >= 360 - 1e-9;
+
         //'left' edge
         let path = `M${p1[0]},${p1[1]} L${p2[0]},${p2[1]}`;
 
         //top edge
-        if (arc) {
+        if (arc && fullCircle) {
+            const outerMid = rotatePointAboutPoint([0, top], [0, 0], startAngle);
+            path += ` A${top},${top} 0 0 1 ${outerMid[0]},${outerMid[1]}`;
+            path += ` A${top},${top} 0 0 1 ${p3[0]},${p3[1]}`;
+        } else if (arc) {
             path += ` A${top},${top} 0 ${largeArch} 1 ${p3[0]},${p3[1]}`;
         } else {
             // path += ` L${p3[0]},${p3[1]}`;
@@ -698,7 +707,13 @@ export class Polymer extends Interactor {
             //'right' edge
             path += ` L${p4[0]},${p4[1]}`;
             //bottom edge
-            path += ` A${bottom},${bottom} 0 ${largeArch} 0 ${p1[0]},${p1[1]}`;
+            if (fullCircle && bottom > 0) {
+                const innerMid = rotatePointAboutPoint([0, bottom], [0, 0], startAngle);
+                path += ` A${bottom},${bottom} 0 0 0 ${innerMid[0]},${innerMid[1]}`;
+                path += ` A${bottom},${bottom} 0 0 0 ${p1[0]},${p1[1]}`;
+            } else if (!fullCircle) {
+                path += ` A${bottom},${bottom} 0 ${largeArch} 0 ${p1[0]},${p1[1]}`;
+            }
         } else {
             // path += ` L${p1[0]},${p1[1]}`;
             //bottom edge
