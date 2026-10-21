@@ -22,7 +22,7 @@ export class NaryLink extends Link {
                 this._path.setAttribute("fill", "none");
                 this._path.setAttribute("stroke", "black");
             }
-            this._path.ontouchstart = evt => self.touchStart(evt);
+            this._path.ontouchstart = evt => this.touchStart(evt); // [FIXED]: was self.touchStart (self = window)
         }
         return this._path;
     }
@@ -31,7 +31,7 @@ export class NaryLink extends Link {
         if(!this._path2) {
             this._path2 = this._createElement("path");
             this._path2.setAttribute("fill", "none");
-            this._path2.ontouchstart = evt => self.touchStart(evt);
+            this._path2.ontouchstart = evt => this.touchStart(evt); // [FIXED]: was self.touchStart (self = window)
         }
         return this._path2;
     }

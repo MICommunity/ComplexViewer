@@ -16,12 +16,17 @@ export class Protein extends Polymer {
         //make highlight
         this.highlight = document.createElementNS(svgns, "rect");
         this.highlight.classList.add("highlight", "participant-highlight");
+        // explicit styles so the exported SVG matches the screen (page CSS is not exported)
+        this.highlight.setAttribute("fill", "none");
+        this.highlight.setAttribute("stroke", "#ffff99");
+        this.highlight.setAttribute("stroke-width", "5");
         this.upperGroup.appendChild(this.highlight);
 
         //make background
         //http://stackoverflow.com/questions/17437408/how-do-i-change-a-circle-to-a-square-using-d3
         this.background = document.createElementNS(svgns, "rect");
         this.background.setAttribute("fill", "#FFFFFF");
+        this.background.setAttribute("stroke", "none");
         this.upperGroup.appendChild(this.background);
         //create label - we will move this svg element around when protein form changes
         this.initLabel();
