@@ -352,10 +352,10 @@ export class App {
       });
     d3.select(this.svgElement).call(this.zoomBehavior);
 
-    // [ADDED]: the tap halo behaves like hover: it goes away once the last finger
-    // is lifted (capture phase, so d3.zoom handlers can't swallow the event)
+    // [ADDED]: the tap halo behaves like hover: it goes away as soon as the last
+    // finger is lifted (capture phase, so d3.zoom handlers can't swallow the event)
     const onTouchRelease = evt => {
-      if (!evt.touches || evt.touches.length === 0) this.scheduleTouchHighlightClear();
+      if (!evt.touches || evt.touches.length === 0) this.setTouchedParticipant(null);
     };
     this.svgElement.addEventListener("touchend", onTouchRelease, true);
     this.svgElement.addEventListener("touchcancel", onTouchRelease, true);
@@ -1381,29 +1381,29 @@ export class App {
   }
 
   // [ADDED]: on touch screens there is no hover, so touching a participant shows
-  // the same yellow highlight halo as mouse-over on desktop, while the finger is
-  // down (and briefly after a quick tap). Hover listeners are notified as on desktop.
+  // the same yellow highlight halo as mouse-over on desktop while the finger is
+  // down. A complex (its NaryLink) can be "touched" too, by finger or mouse, and
+  // then its outline gets the halo while it is pressed or dragged.
+  // Hover listeners are notified as on desktop.
   setTouchedParticipant(participant) {
-    clearTimeout(this.touchHighlightTimer);
     const previous = this.touchedParticipant;
+    this.touchedParticipant = participant || null;
     if (previous && previous !== participant) {
       previous.showHighlight(false);
     }
-    this.touchedParticipant = participant || null;
     if (participant) {
       participant.showHighlight(true);
-      this.notifyHoverListeners([participant.json]);
+      const members = participant.participants || [participant];
+      this.notifyHoverListeners(members.map(p => p.json).filter(Boolean));
     } else if (previous) {
       this.notifyHoverListeners([]);
     }
   }
 
-  // [ADDED]: remove the tap halo shortly after the finger is lifted; the short
-  // delay keeps it visible on a quick tap
-  scheduleTouchHighlightClear(delay = 300) {
-    clearTimeout(this.touchHighlightTimer);
-    if (!this.touchedParticipant) return;
-    this.touchHighlightTimer = setTimeout(() => this.setTouchedParticipant(null), delay);
+  // [ADDED]: true when this participant's (or complex's) halo is kept on by a
+  // touch/press, so a mouse leaving it must not switch the halo off
+  isHighlightPinned(participant) {
+    return !!participant && this.touchedParticipant === participant;
   }
 
   addHoverListener(hoverListener) {
@@ -1573,6 +1573,7 @@ export class App {
     this.dragStart = null;//{};// should prob make that null here and use it as a check in move()
     this.state = App.STATES.MOUSE_UP;
     this.lastMouseUp = time;
+    if (this.touchedParticipant) this.setTouchedParticipant(null); // [ADDED]: release a pressed complex
     return false;
   }
 
