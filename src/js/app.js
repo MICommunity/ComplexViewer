@@ -352,6 +352,14 @@ export class App {
       });
     d3.select(this.svgElement).call(this.zoomBehavior);
 
+    // [ADDED]: the tap halo behaves like hover: it goes away once the last finger
+    // is lifted (capture phase, so d3.zoom handlers can't swallow the event)
+    const onTouchRelease = evt => {
+      if (!evt.touches || evt.touches.length === 0) this.scheduleTouchHighlightClear();
+    };
+    this.svgElement.addEventListener("touchend", onTouchRelease, true);
+    this.svgElement.addEventListener("touchcancel", onTouchRelease, true);
+
     // [ADDED]: proteins and links stop touchstart from bubbling (so they can be
     // dragged), which would hide those fingers from d3.zoom and break pinch-zoom
     // when a finger lands on them. Hand those touches to d3.zoom in the capture
@@ -1372,10 +1380,11 @@ export class App {
     this.notifyExpandListeners();
   }
 
-  // [ADDED]: on touch screens there is no hover, so a tap shows the same yellow
-  // highlight halo as mouse-over on desktop. It stays until another participant
-  // or the background is tapped. Hover listeners are notified as on desktop.
+  // [ADDED]: on touch screens there is no hover, so touching a participant shows
+  // the same yellow highlight halo as mouse-over on desktop, while the finger is
+  // down (and briefly after a quick tap). Hover listeners are notified as on desktop.
   setTouchedParticipant(participant) {
+    clearTimeout(this.touchHighlightTimer);
     const previous = this.touchedParticipant;
     if (previous && previous !== participant) {
       previous.showHighlight(false);
@@ -1387,6 +1396,14 @@ export class App {
     } else if (previous) {
       this.notifyHoverListeners([]);
     }
+  }
+
+  // [ADDED]: remove the tap halo shortly after the finger is lifted; the short
+  // delay keeps it visible on a quick tap
+  scheduleTouchHighlightClear(delay = 300) {
+    clearTimeout(this.touchHighlightTimer);
+    if (!this.touchedParticipant) return;
+    this.touchHighlightTimer = setTimeout(() => this.setTouchedParticipant(null), delay);
   }
 
   addHoverListener(hoverListener) {
