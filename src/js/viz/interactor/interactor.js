@@ -98,6 +98,7 @@ export class Interactor {
     touchStart(evt) {
         this.app.preventDefaultsAndStopPropagation(evt);
         this.app.d3cola.stop();
+        this.app.setTouchedParticipant(this); // [ADDED]: touch screens have no hover, show the halo on tap
         this.app.dragElement = this;
         this.app.dragStart = evt;
         this.app.draggedElement = null;

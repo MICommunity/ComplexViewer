@@ -441,6 +441,8 @@ export class App {
     this.interactorColors = null;
     // [ADDED]: annotation category highlighted from the legend ({annotationSet, category} or null)
     this.highlightedAnnotation = null;
+    // [ADDED]: participant whose highlight halo is shown after a tap (touch screens have no hover)
+    this.touchedParticipant = null;
 
     //lighten complex colors
     let complexColors = [];
@@ -700,11 +702,15 @@ export class App {
     this.annotatePatternFillBBoxes(this.svgElement);
     const svgSel = d3.select(this.el).selectAll("svg");
     const svgArr = [svgSel.node()];
+    // [ADDED]: a tap halo (touch screens) stays on while the user taps Export; keep it out of the image
+    const touched = this.touchedParticipant;
+    if (touched) touched.showHighlight(false);
     let svgStrings;
     try {
       svgStrings = svgUtils.capture(svgArr);
     } finally {
       this.clearPatternFillBBoxAnnotations(this.svgElement);
+      if (touched) touched.showHighlight(true);
     }
     this.prepareSVGForExport(svgStrings[0]);
     return svgUtils.makeXMLStr(new XMLSerializer(), svgStrings[0]);
@@ -1366,6 +1372,23 @@ export class App {
     this.notifyExpandListeners();
   }
 
+  // [ADDED]: on touch screens there is no hover, so a tap shows the same yellow
+  // highlight halo as mouse-over on desktop. It stays until another participant
+  // or the background is tapped. Hover listeners are notified as on desktop.
+  setTouchedParticipant(participant) {
+    const previous = this.touchedParticipant;
+    if (previous && previous !== participant) {
+      previous.showHighlight(false);
+    }
+    this.touchedParticipant = participant || null;
+    if (participant) {
+      participant.showHighlight(true);
+      this.notifyHoverListeners([participant.json]);
+    } else if (previous) {
+      this.notifyHoverListeners([]);
+    }
+  }
+
   addHoverListener(hoverListener) {
     this.hoverListeners.add(hoverListener);
   }
@@ -1437,6 +1460,7 @@ export class App {
 
   touchStart(evt) {
     evt.preventDefault();
+    this.setTouchedParticipant(null); // [ADDED]: tapping the background removes the halo
     this.d3cola.stop();
     this.dragStart = evt;
     this.draggedElement = null;
