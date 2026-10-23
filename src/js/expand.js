@@ -51,7 +51,14 @@ export function matrix(json) {
 
                             // Also, adjust our sequence data
                             feature.sequenceData.forEach(function (sequenceData) {
-                                sequenceData.participantRef = clonedParticipant.id;
+                                // [FIXED]: only re-point positions that were on the participant being
+                                // cloned (or had no participantRef). A feature can list positions on
+                                // another participant; re-pointing those created references to
+                                // participants that don't exist (e.g. "Q9VT76(5_0)") and crashed
+                                // getBinaryLink() while reading the file (EBI-6884640).
+                                if (!sequenceData.participantRef || sequenceData.participantRef === participant.id) {
+                                    sequenceData.participantRef = clonedParticipant.id;
+                                }
                                 //~ sequenceData.interactorRef = clonedInteractor.id;
                             });
                         });

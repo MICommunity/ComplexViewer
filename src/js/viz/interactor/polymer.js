@@ -383,7 +383,8 @@ export class Polymer extends Interactor {
             self.labelSVG.transform.baseVal.initialize(self.app.svgElement.createSVGTransformFromMatrix(k));
 
             const currentLength = lengthInterpol(cubicInOut(interp));
-            d3.select(self.highlight).attr("width", currentLength).attr("x", -(currentLength / 2) + (0.5 * self.stickZoom));
+            // [FIXED]: keep the same 2.5px margin as top/bottom (height is STICKHEIGHT + 5), so the halo is equally thick on all sides
+            d3.select(self.highlight).attr("width", currentLength + 5).attr("x", -(currentLength / 2) + (0.5 * self.stickZoom) - 2.5);
             d3.select(self.outline).attr("width", currentLength).attr("x", -(currentLength / 2) + (0.5 * self.stickZoom));
             d3.select(self.background).attr("width", currentLength).attr("x", -(currentLength / 2) + (0.5 * self.stickZoom));
             self.stickZoom = stickZoomInterpol(cubicInOut(interp));
