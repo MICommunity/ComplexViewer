@@ -15,7 +15,7 @@ export class Complex extends Interactor {
         this.padding = 28;
     }
 
-    // [ADDED]: a sub-complex is highlighted through its outline halo
+    // a sub-complex is highlighted through its outline halo
     showHighlight(show) {
         if (this.naryLink) this.naryLink.showHighlight(show);
     }

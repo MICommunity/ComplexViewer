@@ -98,7 +98,7 @@ export class Interactor {
     touchStart(evt) {
         this.app.preventDefaultsAndStopPropagation(evt);
         this.app.d3cola.stop();
-        this.app.setTouchedParticipant(this); // [ADDED]: touch screens have no hover, show the halo on tap
+        this.app.setTouchedParticipant(this); // no hover on touch screens
         this.app.dragElement = this;
         this.app.dragStart = evt;
         this.app.draggedElement = null;
@@ -114,7 +114,7 @@ export class Interactor {
 
     mouseOut(evt) {
         this.app.preventDefaultsAndStopPropagation(evt);
-        this.showHighlight(this.app.isHighlightPinned(this)); // [MODIFIED]: keep it while it is pressed
+        this.showHighlight(this.app.isHighlightPinned(this)); // keep it while pressed
         this.app.hideTooltip();
         this.app.notifyHoverListeners([]);
         return false;
@@ -124,10 +124,8 @@ export class Interactor {
         return 15;
     }
 
-    // [ADDED]: highlight halo for any node shape (triangle, diamonds, rounded
-    // rectangles, hexagon...): a copy of the node's outline drawn behind it with a
-    // wide yellow stroke, so the halo follows the shape. Proteins (Polymer) have
-    // their own halo, which also changes between circle and bar.
+    // Halo for any node shape: a copy of the outline drawn behind it with a wide
+    // yellow stroke. Proteins (Polymer) have their own halo.
     showHighlight(show) {
         if (!this.outline || !this.upperGroup) return;
         if (!this.highlight) {

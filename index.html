@@ -32,9 +32,7 @@
             transition: width 120ms linear;
         }
 
-        /**
-         * [ADDED]: clickable legend entries (highlight proteins with an annotation)
-         */
+        /* clickable legend entries (highlight proteins with an annotation) */
         #colors tr.legend-clickable {
             cursor: pointer;
         }
@@ -250,7 +248,7 @@
         }
     });
 
-    // [ADDED]: Escape clears the legend highlight
+    // Escape clears the legend highlight
     document.addEventListener("keydown", evt => {
         if (evt.key === "Escape" && cv.getHighlightedAnnotation()) {
             cv.clearAnnotationHighlight();
@@ -374,12 +372,11 @@
                 }
                 const tc3 = tr.insertCell();
                 tc3.style.paddingLeft = "10px";
-                // [ADDED]: show how many proteins carry this annotation
                 tc3.textContent = typeof legendEntry.count === "number" && majorClass !== "Interactor"
                     ? `${legendEntry.name} (${legendEntry.count})`
                     : legendEntry.name;
 
-                // [ADDED]: click an annotation entry to highlight the proteins that have it
+                // click an annotation entry to highlight the proteins that have it
                 if (majorClass !== "Complex") {
                     tr.classList.add("legend-clickable");
                     tr.title = "Click to highlight the proteins with this annotation (click again to clear)";

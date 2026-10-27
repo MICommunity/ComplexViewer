@@ -23,7 +23,7 @@ export class NaryLink extends Link {
                 this._path.setAttribute("fill", "none");
                 this._path.setAttribute("stroke", "black");
             }
-            this._path.ontouchstart = evt => this.touchStart(evt); // [FIXED]: was self.touchStart (self = window)
+            this._path.ontouchstart = evt => this.touchStart(evt);
         }
         return this._path;
     }
@@ -32,14 +32,13 @@ export class NaryLink extends Link {
         if(!this._path2) {
             this._path2 = this._createElement("path");
             this._path2.setAttribute("fill", "none");
-            this._path2.ontouchstart = evt => this.touchStart(evt); // [FIXED]: was self.touchStart (self = window)
+            this._path2.ontouchstart = evt => this.touchStart(evt);
         }
         return this._path2;
     }
 
-    // [ADDED]: yellow halo that follows the complex outline, drawn just behind it,
-    // like the halo of a single node. Shown on hover (desktop) and while the
-    // complex is pressed or dragged (mouse or finger).
+    // yellow halo following the complex outline, drawn just behind it; shown on
+    // hover and while the complex is pressed or dragged
     get haloPath () {
         if (!this._haloPath) {
             const halo = document.createElementNS(svgns, "path");
@@ -55,7 +54,6 @@ export class NaryLink extends Link {
         return this._haloPath;
     }
 
-    // [MODIFIED]: highlights the complex itself (its outline) instead of its members
     showHighlight (show) {
         this.haloPath.setAttribute("stroke-opacity", show ? "1" : "0");
     }
@@ -72,8 +70,6 @@ export class NaryLink extends Link {
         return false;
     }
 
-    // [ADDED]: pressing or dragging a complex (mouse or finger) shows its halo,
-    // like touching a single node; released on mouse up / touch end
     mouseDown(evt) {
         super.mouseDown(evt);
         this.app.setTouchedParticipant(this);
@@ -94,7 +90,7 @@ export class NaryLink extends Link {
     show() {
         // this.path.setAttribute("stroke-width", this.app.z);
         // this.setLinkCoordinates(); // having this here slows down start up. instead see getPosition in complex.js
-        this.app.naryLinks.appendChild(this.haloPath); // [ADDED]: behind its own outline
+        this.app.naryLinks.appendChild(this.haloPath);
         this.app.naryLinks.appendChild(this.path);
         this.app.naryLinks.appendChild(this.path2);
     }
@@ -111,7 +107,7 @@ export class NaryLink extends Link {
         if (hullValues) {
             this.path.setAttribute("d", hullValues);
             this.path2.setAttribute("d", hullValues);
-            this.haloPath.setAttribute("d", hullValues); // [ADDED]
+            this.haloPath.setAttribute("d", hullValues);
         }
         if (this.complex && !dontPropogate) {
             this.complex.setAllLinkCoordinates();

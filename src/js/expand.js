@@ -51,11 +51,9 @@ export function matrix(json) {
 
                             // Also, adjust our sequence data
                             feature.sequenceData.forEach(function (sequenceData) {
-                                // [FIXED]: only re-point positions that were on the participant being
-                                // cloned (or had no participantRef). A feature can list positions on
-                                // another participant; re-pointing those created references to
-                                // participants that don't exist (e.g. "Q9VT76(5_0)") and crashed
-                                // getBinaryLink() while reading the file (EBI-6884640).
+                                // only re-point positions on the participant being cloned: a feature
+                                // can also list positions on other participants, and re-pointing those
+                                // creates refs to participants that don't exist (crash in EBI-6884640)
                                 if (!sequenceData.participantRef || sequenceData.participantRef === participant.id) {
                                     sequenceData.participantRef = clonedParticipant.id;
                                 }
