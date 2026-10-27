@@ -98,6 +98,7 @@ export class Interactor {
     touchStart(evt) {
         this.app.preventDefaultsAndStopPropagation(evt);
         this.app.d3cola.stop();
+        this.app.setTouchedParticipant(this); // no hover on touch screens
         this.app.dragElement = this;
         this.app.dragStart = evt;
         this.app.draggedElement = null;
@@ -113,7 +114,7 @@ export class Interactor {
 
     mouseOut(evt) {
         this.app.preventDefaultsAndStopPropagation(evt);
-        this.showHighlight(false);
+        this.showHighlight(this.app.isHighlightPinned(this)); // keep it while pressed
         this.app.hideTooltip();
         this.app.notifyHoverListeners([]);
         return false;
@@ -123,7 +124,26 @@ export class Interactor {
         return 15;
     }
 
-    showHighlight() {
+    // Halo for any node shape: a copy of the outline drawn behind it with a wide
+    // yellow stroke. Proteins (Polymer) have their own halo.
+    showHighlight(show) {
+        if (!this.outline || !this.upperGroup) return;
+        if (!this.highlight) {
+            const halo = this.outline.cloneNode(false);
+            halo.removeAttribute("class");
+            halo.removeAttribute("style");
+            halo.classList.add("highlight");
+            const outlineWidth = parseFloat(this.outline.getAttribute("stroke-width")) || 1;
+            halo.setAttribute("fill", "none");
+            halo.setAttribute("stroke", "#ffff99");
+            halo.setAttribute("stroke-width", 10 + outlineWidth); // ~5px visible outside the outline, like proteins
+            halo.setAttribute("stroke-linejoin", "round");
+            halo.setAttribute("stroke-opacity", "0");
+            halo.setAttribute("pointer-events", "none");
+            this.upperGroup.insertBefore(halo, this.upperGroup.firstChild);
+            this.highlight = halo;
+        }
+        this.highlight.setAttribute("stroke-opacity", show ? "1" : "0");
     }
 
     getPosition() {

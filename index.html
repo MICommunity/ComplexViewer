@@ -31,6 +31,24 @@
             background: #555555;
             transition: width 120ms linear;
         }
+
+        /* clickable legend entries (highlight proteins with an annotation) */
+        #colors tr.legend-clickable {
+            cursor: pointer;
+        }
+
+        #colors tr.legend-clickable:hover td:last-child {
+            text-decoration: underline;
+        }
+
+        #colors tr.legend-active td:last-child {
+            font-weight: bold;
+        }
+
+        #colors tr.legend-active td:first-child {
+            outline: 2px solid #000000;
+            outline-offset: -2px;
+        }
     </style>
     <!--libraries-->
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.2.2/d3.v3.min.js"></script>
@@ -153,7 +171,17 @@
                     <div class="">
                         <button class="btn btn-1 btn-1a" onclick="cv.autoLayout();" style="display:inline">Layout
                         </button>
-                        <button class="btn btn-1 btn-1a" onclick="exportSVG();" style="display:inline">Export Graphic
+                        <label for="exportFormat">Export:</label>
+                        <select id="exportFormat" onchange="updateExportControls();">
+                            <option value="svg">SVG</option>
+                            <option value="png">PNG</option>
+                        </select>
+                        <select id="pngScale" title="PNG resolution" disabled>
+                            <option value="1">1x</option>
+                            <option value="2" selected>2x</option>
+                            <option value="4">4x</option>
+                        </select>
+                        <button class="btn btn-1 btn-1a" onclick="exportGraphic();" style="display:inline">Export
                         </button>
                     </div>
 
@@ -217,6 +245,14 @@
         }
         if (!event.loading) {
              makeLegend(cv.getColorKeyJson());
+        }
+    });
+
+    // Escape clears the legend highlight
+    document.addEventListener("keydown", evt => {
+        if (evt.key === "Escape" && cv.getHighlightedAnnotation()) {
+            cv.clearAnnotationHighlight();
+            makeLegend(cv.getColorKeyJson());
         }
     });
 
@@ -336,16 +372,42 @@
                 }
                 const tc3 = tr.insertCell();
                 tc3.style.paddingLeft = "10px";
-                tc3.textContent = legendEntry.name;
+                tc3.textContent = typeof legendEntry.count === "number" && majorClass !== "Interactor"
+                    ? `${legendEntry.name} (${legendEntry.count})`
+                    : legendEntry.name;
+
+                // click an annotation entry to highlight the proteins that have it
+                if (majorClass !== "Complex") {
+                    tr.classList.add("legend-clickable");
+                    tr.title = "Click to highlight the proteins with this annotation (click again to clear)";
+                    if (legendEntry.highlighted) tr.classList.add("legend-active");
+                    tr.onclick = () => {
+                        const result = cv.highlightAnnotationCategory(majorClass, legendEntry.name);
+                        if (result) console.log(`"${result.category}" (${majorClass}) in:`, result.participants);
+                        makeLegend(cv.getColorKeyJson());
+                    };
+                }
             }
         }
         div.appendChild(colorTable);
     }
 
-    function exportSVG() {
+    function updateExportControls() {
+        const format = document.getElementById("exportFormat").value;
+        document.getElementById("pngScale").disabled = format !== "png";
+    }
+
+    function exportGraphic() {
         const dataSetsSelect = document.getElementById("dataSets");
-        const fileName = dataSetsSelect.options[dataSetsSelect.selectedIndex].value + ".svg"
-        cv.downloadSVG(fileName);
+        const baseName = dataSetsSelect.options[dataSetsSelect.selectedIndex].value;
+        const format = document.getElementById("exportFormat").value;
+
+        if (format === "png") {
+            const scale = Number(document.getElementById("pngScale").value);
+            cv.downloadPNG(baseName + ".png", scale);
+        } else {
+            cv.downloadSVG(baseName + ".svg");
+        }
     }
 
     //]]>

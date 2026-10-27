@@ -1,18 +1,31 @@
 import "../css/xinet.css";
 import packageInfo from "../../package.json";
 import * as d3 from "d3";
-import {scaleOrdinal} from "d3-scale";
-import {schemePastel2, schemeTableau10} from "d3-scale-chromatic";
 import * as cola from "./cola";
-import Rgb_color from "rgb-color";
 
 import {svgUtils} from "./svgexp";
 import {readMijson} from "./read-mijson";
-//import {fetchAnnotations} from "./annotation-utils";
 import {fetchAnnotations} from "./annotation-utils";
 
 import {NaryLink} from "./viz/link/nary-link";
 import {svgns} from "./svgns";
+import {
+  createHatchedFill,
+  hatchId,
+  makeComplexColorScale,
+  makeFeatureColorResolver,
+  makeInteractorColorScale,
+  withAlpha
+} from "./color";
+import {
+  annotatePatternFillBBoxes,
+  clearPatternFillBBoxAnnotations,
+  downloadPNGFromSVGString,
+  downloadSVGString,
+  prepareSVGForExport
+} from "./export";
+import {setupZoom} from "./zoom";
+import {applyAnnotationHighlight, participantsWithAnnotation} from "./annotation-highlight";
 
 import $ from "jquery";
 
@@ -39,6 +52,7 @@ const ALL_ANNOTATION_SETS = [
   ...INTERNAL_ANNOTATION_SETS,
   ...EXTERNAL_ANNOTATION_SETS,
 ];
+
 
 export class App {
 
@@ -96,23 +110,23 @@ export class App {
     scaleButtons.append("span")
       .text(d => d === 8 ? "AA" : d);
     scaleButtons.append("input")
-      // .attr ("id", function(d) { return d*100; })
       .attr("class", d => `scaleButton scaleButton_${d * 100}`)
       .attr("name", "scaleButtons")
       .attr("type", "radio")
       .on("change", (e, d) => {
-        this.preventDefaultsAndStopPropagation(d);
+        this.preventDefaultsAndStopPropagation(e); 
         this.contextMenuProt.setStickScale(d, this.contextMenuPoint);
       });
     const contextMenu = d3.select(".custom-menu-margin").node();
 
     const self = this;
     contextMenu.onmouseout = function (evt) {
+      // avoid relatedTarget being null when the pointer leaves the window
       let e = evt.relatedTarget;
-      do {
+      while (e) {
         if (e === this) return;
         e = e.parentNode;
-      } while (e);
+      }
       self.contextMenuProt = null;
       d3.select(this).style("display", "none");
     };
@@ -139,14 +153,6 @@ export class App {
       evt.returnValue = false; // necessary for attachEvent, works with traditional
       return false; // works with traditional, not with attachEvent or addEventListener
     };
-
-
-    const mouseWheelEvt = (/Firefox/i.test(navigator.userAgent)) ? "DOMMouseScroll" : "mousewheel"; //FF doesn't recognize mousewheel as of FF3.x
-    if (document.attachEvent) { //if IE (and Opera depending on user setting)
-      this.svgElement.attachEvent(`on${mouseWheelEvt}`, evt => this.mouseWheel(evt));
-    } else if (document.addEventListener) { //WC3 browsers
-      this.svgElement.addEventListener(mouseWheelEvt, evt => this.mouseWheel(evt), false);
-    }
 
 
     //functions that get interactor id of hover over thing
@@ -203,6 +209,8 @@ export class App {
 
     this.svgElement.appendChild(this.container);
 
+    this.zoomBehavior = setupZoom(this);
+
     //showing title as tooltips is NOT part of svg spec (even though some browsers do this)
     //also more responsive / more control if we do out own
     this.tooltip = document.createElementNS(svgns, "text");
@@ -222,6 +230,9 @@ export class App {
     this.svgElement.appendChild(this.tooltip_subBg);
     this.svgElement.appendChild(this.tooltip_bg);
     this.svgElement.appendChild(this.tooltip);
+
+    // fade level for legend highlighting (kept across datasets; change with setHighlightOpacityLevel)
+    this.highlightOpacityLevel = 0.15;
 
     this.annotationSetsShown = new Map();
     ALL_ANNOTATION_SETS.forEach(a => this.annotationSetsShown.set(a, initialAnnotations.includes(a)));
@@ -256,14 +267,11 @@ export class App {
     this.allSequenceLinks = new Map();
     this.complexes = [];
 
-    //lighten complex colors
-    let complexColors = [];
-    for (let c of schemePastel2) {//colorbrewer.Pastel2[8]) {
-      const hsl = d3.hsl(c);
-      hsl.l = 0.9;
-      complexColors.push(`${hsl}`);
-    }
-    NaryLink.naryColors = scaleOrdinal().range(complexColors);
+    this.interactorColors = null; // built once per dataset, see updateAnnotations()
+    this.highlightedAnnotation = null; // {annotationSet, category} clicked in the legend
+    this.touchedParticipant = null; // pressed participant/complex, shows the hover halo
+
+    NaryLink.naryColors = makeComplexColorScale();
 
     this.z = 1;
     this.hideTooltip();
@@ -330,46 +338,19 @@ export class App {
     const width = this.svgElement.parentNode.clientWidth;
     const height = this.svgElement.parentNode.clientHeight;
     const bbox = this.container.getBBox();
-    let xr = (width / bbox.width).toFixed(4);
-    let yr = (height / bbox.height).toFixed(4);
-    let scaleFactor;
-    if (yr < xr) {
-      scaleFactor = yr;
-    } else {
-      scaleFactor = xr;
-    }
-    if (scaleFactor < 1) { ///didn't fit in div
-      //console.log("no fit", scaleFactor);
-      xr = (width - 40) / (bbox.width);
-      yr = (height - 40) / (bbox.height);
-      let scaleFactor;
-      if (yr < xr) {
-        scaleFactor = yr;
-      } else {
-        scaleFactor = xr;
-      }
-
-      if (scaleFactor > this.z) {
-        scaleFactor = this.z;
-      }
-
-      //bbox.x + x = 0;
-      let x = -bbox.x + (20 / scaleFactor);
-      //box.y + y = 0
-      let y = -bbox.y + (20 / scaleFactor);
-      this.container.setAttribute("transform", `scale(${scaleFactor}) translate(${x} ${y}) `);
-      this.z = this.container.getCTM().inverse().a;
-    } else {
-      //console.log("fit", scaleFactor);
-      // this.container.setAttribute("transform", `scale(1) translate(${-(width / 2)} ${-bbox.y})`);
-      const deltaWidth = width - bbox.width;
-      const deltaHeight = height - bbox.height;
-      //bbox.x + x = deltaWidth /2;
-      let x = (deltaWidth / 2) - bbox.x;
-      //box.y + y = deltaHeight / 2
-      let y = (deltaHeight / 2) - bbox.y;
-      this.container.setAttribute("transform", `scale(1) translate(${x} ${y})`);
-      this.z = 1;
+    const margin = {top: 20, right: 20, bottom: 55, left: 20};
+    const availableWidth = Math.max(1, width - margin.left - margin.right);
+    const availableHeight = Math.max(1, height - margin.top - margin.bottom);
+    if (bbox.width > 0 && bbox.height > 0 && width > 0 && height > 0) {
+      // 100% if it fits, otherwise shrink into the drawable area. The bottom
+      // margin keeps the acknowledgement from overlapping the graph.
+      const k = Math.min(1, availableWidth / bbox.width, availableHeight / bbox.height);
+      const fitsAtFullSize = bbox.width <= availableWidth && bbox.height <= availableHeight;
+      const scale = fitsAtFullSize ? 1 : k;
+      const tx = margin.left + (availableWidth - bbox.width * scale) / 2 - bbox.x * scale;
+      const ty = margin.top + (availableHeight - bbox.height * scale) / 2 - bbox.y * scale;
+      // apply through d3.zoom so later gestures start from this view (no jump)
+      d3.select(this.svgElement).call(this.zoomBehavior.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
     }
 
     //todo - following could be tided up by using acknowledgement bbox or positioning att's of text
@@ -535,9 +516,21 @@ export class App {
   }
 
   getSVG() {
+    this.setAllLinkCoordinates();
+    annotatePatternFillBBoxes(this.svgElement);
     const svgSel = d3.select(this.el).selectAll("svg");
     const svgArr = [svgSel.node()];
-    const svgStrings = svgUtils.capture(svgArr);
+    // a tap halo is still on while the user taps Export: keep it out of the image
+    const touched = this.touchedParticipant;
+    if (touched) touched.showHighlight(false);
+    let svgStrings;
+    try {
+      svgStrings = svgUtils.capture(svgArr);
+    } finally {
+      clearPatternFillBBoxAnnotations(this.svgElement);
+      if (touched) touched.showHighlight(true);
+    }
+    prepareSVGForExport(svgStrings[0]);
     return svgUtils.makeXMLStr(new XMLSerializer(), svgStrings[0]);
   }
 
@@ -643,9 +636,10 @@ export class App {
 
 //for backwards compatibility (noe?)
   setAnnotations(annoChoice) {
-    annoChoice = annoChoice.toUpperCase();
+    // keys are e.g. "MI Features", so compare case-insensitively
+    const choice = annoChoice.toUpperCase();
     for (let annoType of this.annotationSetsShown.keys()) {
-      this.annotationSetsShown.set(annoType, annoChoice === annoType);
+      this.annotationSetsShown.set(annoType, annoType.toUpperCase() === choice);
     }
     this.updateAnnotations();
     return this.getColorKeyJson();
@@ -683,7 +677,7 @@ export class App {
     this.defs.textContent = ""; // clears hatched fills
     this.uncertainCategories = new Set();
     this.certainCategories = new Set();
-    delete this.featureColors; // a d3.scale.ordinal
+    delete this.featureColors; // category -> color function
     // figure out which categories are visible
     const categories = new Set();
     for (let participant of this.participants.values()) {
@@ -695,81 +689,17 @@ export class App {
         }
       }
     }
-    //choose appropriate color scheme
-    let colorScheme;
-    if (categories.size <= 10) {
-      colorScheme = scaleOrdinal().range(schemeTableau10);
-    } else {
-      colorScheme = d3.scaleOrdinal().range([
-        "#38cae3",
-        "#d4582b",
-        "#7d5fd7",
-        "#7cd352",
-        "#ce4bbb",
-        "#5aa33c",
-        "#93539d",
-        "#d2c33b",
-        "#5c83d4",
-        "#e19a46",
-        "#d891d7",
-        "#65da9a",
-        "#9d772f",
-        "#d43f4c",
-        "#4db186",
-        "#cf4b7e",
-        "#477c3a",
-        "#c46d5c",
-        "#b6c671",
-        "#798126"
-      ]); // Generated from https://medialab.github.io/iwanthue/
+
+    // Interactor colors are built from all participants, whatever annotation
+    // sets are shown, so they don't change when sets are toggled.
+    if (!this.interactorColors) {
+      const interactorCats = new Set();
+      for (const p of this.participants.values()) {
+        for (const a of p.annotationSets.get("Interactor") || []) interactorCats.add(a.category);
+      }
+      this.interactorColors = makeInteractorColorScale([...interactorCats]);
     }
-
-    const self = this;
-
-    const disprotColors = {
-      "Structural state": "#B67637",
-      "Structural transition": "#8B296F",
-      "Disorder function": "#BA2327",
-      //
-      //
-      // // Branch 3: Disorder function (we group all functions here)
-      // 'Biological process': "#cb5c5c",
-      // 'Molecular function': "#e64a4e",
-      // 'Cellular component': "#971e22"
-    };
-    // [ADDED]: AlphaFold confidence color mapping configuration
-    const alphaFoldColors = {
-      "Very high confidence": "#0053d6",
-      "High confidence": "#65cbf3",
-      "Low confidence": "#ffe915",
-      "Very low confidence": "#ff7d45"
-    };
-
-    const getCustomOrNormalColor = (description) =>
-      alphaFoldColors[description] || disprotColors[description] || colorScheme(description);
-
-    function createHatchedFill(name, color) {
-      const pattern = self.defs.append("pattern")
-        .attr("id", name)
-        .attr("patternUnits", "userSpaceOnUse")
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("width", 12)
-        .attr("height", 12)
-        .attr("patternTransform", "rotate(45)");
-      pattern.append("rect")
-        .attr("x", 0)
-        .attr("y", 2)
-        .attr("width", 12)
-        .attr("height", 4)
-        .attr("fill", color);
-      pattern.append("rect")
-        .attr("x", 0)
-        .attr("y", 8)
-        .attr("width", 12)
-        .attr("height", 4)
-        .attr("fill", color);
-    }
+    const getColor = makeFeatureColorResolver(categories, this.interactorColors);
 
     for (let participant of this.participants.values()) {
       if (participant.type === "protein") {
@@ -782,8 +712,7 @@ export class App {
               if (anno.description === "No annotations") {
                 color = "#eeeeee";
               } else {
-                //[MODIFIED]: Use the unified color selector instead of just DisProt
-                color = getCustomOrNormalColor(anno.category);
+                color = getColor(anno.category);
               }
               if (anno.certain) {
                 anno.certain.setAttribute("fill", color);
@@ -792,13 +721,10 @@ export class App {
               }
               if (anno.fuzzyStart || anno.fuzzyEnd) {
                 if (!this.uncertainCategories.has(anno.category)) {
-                  // make transparent version of color
-                  const temp = new Rgb_color(color);
-                  const transpColor = `rgba(${temp.r},${temp.g},${temp.b}, 0.6)`;
-                  createHatchedFill(`hatched_${anno.category}_${color.toString()}`, transpColor);
+                  createHatchedFill(this.defs, hatchId(anno.category, color), color, 0.6);
                   this.uncertainCategories.add(anno.category);
                 }
-                const checkedFill = `url('#hatched_${anno.category}_${color.toString()}')`;
+                const checkedFill = `url(#${hatchId(anno.category, color)})`;
                 if (anno.fuzzyStart) {
                   anno.fuzzyStart.setAttribute("fill", checkedFill);
                   anno.fuzzyStart.setAttribute("stroke", color);
@@ -813,8 +739,70 @@ export class App {
         }
       }
     }
-    //[MODIFIED]: Assign the new unified color resolver to featureColors
-    this.featureColors = getCustomOrNormalColor;
+    this.featureColors = getColor;
+
+    // annotation paths were just rebuilt, so re-apply any legend highlight
+    this.applyAnnotationHighlight();
+  }
+
+  // Accepts the annotation set id ("InterPro") or its legend label ("InterPro Domains").
+  resolveAnnotationSet(setOrLabel) {
+    if (this.annotationSetsShown.has(setOrLabel)) return setOrLabel;
+    for (const [set, label] of Object.entries(ANNOTATION_SET_LABELS)) {
+      if (label === setOrLabel) return set;
+    }
+    return null;
+  }
+
+  // Proteins that carry an annotation of `category` in `annotationSet`.
+  getParticipantsWithAnnotation(annotationSet, category) {
+    const set = this.resolveAnnotationSet(annotationSet);
+    return set ? participantsWithAnnotation(this.participants.values(), set, category) : [];
+  }
+
+  // Highlight the proteins that have this annotation category and, inside them,
+  // the regions of that category; everything else is faded. Calling it again
+  // with the same category (or with null) clears the highlight.
+  // Returns {annotationSet, category, participants: [names]} or null when cleared.
+  highlightAnnotationCategory(annotationSet, category, fadedOpacity) {
+    const set = annotationSet ? this.resolveAnnotationSet(annotationSet) : null;
+    if (fadedOpacity != null) this.highlightOpacityLevel = fadedOpacity; // only change it when given
+    const current = this.highlightedAnnotation;
+    if (!set || category == null || (current && current.annotationSet === set && current.category === category)) {
+      this.highlightedAnnotation = null;
+    } else {
+      this.highlightedAnnotation = {annotationSet: set, category};
+    }
+    this.applyAnnotationHighlight();
+    return this.getHighlightedAnnotation();
+  }
+
+  setHighlightOpacityLevel(opacity) {
+    this.highlightOpacityLevel = opacity;
+    this.applyAnnotationHighlight();
+  }
+
+  clearAnnotationHighlight() {
+    this.highlightedAnnotation = null;
+    this.applyAnnotationHighlight();
+  }
+
+  getHighlightedAnnotation() {
+    const h = this.highlightedAnnotation;
+    if (!h) return null;
+    return {
+      annotationSet: h.annotationSet,
+      category: h.category,
+      participants: this.getParticipantsWithAnnotation(h.annotationSet, h.category).map(p => p.name || p.id)
+    };
+  }
+
+  applyAnnotationHighlight() {
+    // the highlighted set was switched off -> drop the highlight
+    if (this.highlightedAnnotation && !this.isAnnotationSetRenderable(this.highlightedAnnotation.annotationSet)) {
+      this.highlightedAnnotation = null;
+    }
+    applyAnnotationHighlight(this, this.highlightedAnnotation, this.highlightOpacityLevel);
   }
 
   getColorKeyJson() {
@@ -827,12 +815,15 @@ export class App {
         if (shown && this.isAnnotationSetRenderable(annotationSet)) {
           const featureTypes = [];
           const dupCheck = new Set();
+          const proteinsPerCategory = new Map(); // category -> proteins that have it
           for (let p of this.participants.values()) {
             if (p.type === "protein") {
               const annos = p.annotationSets.get(annotationSet);
               if (annos) {
                 for (let anno of annos) {
                   const category = anno.category;
+                  if (!proteinsPerCategory.has(category)) proteinsPerCategory.set(category, new Set());
+                  proteinsPerCategory.get(category).add(p);
                   if (!dupCheck.has(category)) {
                     dupCheck.add(category);
                     const featureType = {
@@ -842,16 +833,18 @@ export class App {
                       featureType.certain = {"color": this.featureColors(category)};
                     }
                     if (this.uncertainCategories.has(category)) {
-                      // make transparent version of color
-                      const temp = new Rgb_color(this.featureColors(category));
-                      const transpColor = `rgba(${temp.r},${temp.g},${temp.b}, 0.6)`;
-                      featureType.uncertain = {"color": transpColor};
+                      featureType.uncertain = {"color": withAlpha(this.featureColors(category), 0.6)};
                     }
                     featureTypes.push(featureType);
                   }
                 }
               }
             }
+          }
+          const h = this.highlightedAnnotation;
+          for (const ft of featureTypes) {
+            ft.count = proteinsPerCategory.has(ft.name) ? proteinsPerCategory.get(ft.name).size : 0;
+            ft.highlighted = !!(h && h.annotationSet === annotationSet && h.category === ft.name);
           }
           const label = ANNOTATION_SET_LABELS[annotationSet] || annotationSet;
           json[label] = featureTypes;
@@ -897,12 +890,35 @@ export class App {
     this.notifyExpandListeners();
   }
 
+  // Touch screens have no hover, so a pressed participant shows the hover halo
+  // while the finger is down. A complex (its NaryLink) can be pressed too, by
+  // finger or mouse. Hover listeners are notified as on desktop.
+  setTouchedParticipant(participant) {
+    const previous = this.touchedParticipant;
+    this.touchedParticipant = participant || null;
+    if (previous && previous !== participant) {
+      previous.showHighlight(false);
+    }
+    if (participant) {
+      participant.showHighlight(true);
+      const members = participant.participants || [participant];
+      this.notifyHoverListeners(members.map(p => p.json).filter(Boolean));
+    } else if (previous) {
+      this.notifyHoverListeners([]);
+    }
+  }
+
+  // true when the halo is kept on by a press, so mouseout must not hide it
+  isHighlightPinned(participant) {
+    return !!participant && this.touchedParticipant === participant;
+  }
+
   addHoverListener(hoverListener) {
     this.hoverListeners.add(hoverListener);
   }
 
   removeHoverListener(hoverListener) {
-    this.hoverListeners.remove(hoverListener);
+    this.hoverListeners.delete(hoverListener);
   }
 
   notifyHoverListeners(interactorArr) {
@@ -968,6 +984,7 @@ export class App {
 
   touchStart(evt) {
     evt.preventDefault();
+    this.setTouchedParticipant(null);
     this.d3cola.stop();
     this.dragStart = evt;
     this.draggedElement = null;
@@ -1003,11 +1020,8 @@ export class App {
             // console.log("MAKING DRAG ACTIVE!");
             this.state = App.STATES.DRAGGING;
           }
-        } else if (this.state === App.STATES.SELECT_PAN) { // mouse down on container svg element
-          // console.log("PAN!");
-          this.setCTM(this.container, this.container.getCTM().translate(c.x - ds.x, c.y - ds.y));
-          this.dragStart = evt;
         }
+        // panning the background is done by d3.zoom (see zoom.js)
       } else { // !this.dragStart
         // console.log("TOOLTIP POSITION!");
         this.moveTooltip(p);
@@ -1066,26 +1080,7 @@ export class App {
     this.dragStart = null;//{};// should prob make that null here and use it as a check in move()
     this.state = App.STATES.MOUSE_UP;
     this.lastMouseUp = time;
-    return false;
-  }
-
-  mouseWheel(evt) {
-    this.preventDefaultsAndStopPropagation(evt);
-    this.d3cola.stop();
-    let delta;
-    //see http://stackoverflow.com/questions/5527601/normalizing-mousewheel-speed-across-browsers
-    if (evt.wheelDelta) {
-      delta = evt.wheelDelta / 3600; // Chrome/Safari
-    } else {
-      delta = evt.detail / -90; // Mozilla
-    }
-    const z = 1 + delta;
-    const g = this.container;
-    const p = this.getEventPoint(evt);
-    const c = p.matrixTransform(g.getCTM().inverse());
-    const k = this.svgElement.createSVGMatrix().translate(c.x, c.y).scale(z).translate(-c.x, -c.y);
-    this.setCTM(g, g.getCTM().multiply(k));
-    //this.scale();
+    if (this.touchedParticipant) this.setTouchedParticipant(null);
     return false;
   }
 
@@ -1095,9 +1090,16 @@ export class App {
 
   getEventPoint(evt) {
     const p = this.svgElement.createSVGPoint();
-    // *****!$$$ finally, cross-browser
-    p.x = evt.pageX - $(this.el).offset().left;
-    p.y = evt.pageY - $(this.el).offset().top;
+    // touch events have no pageX/pageY: use the first touch (changedTouches on touchend)
+    let src = evt;
+    if (evt.touches && evt.touches.length) {
+      src = evt.touches[0];
+    } else if (evt.changedTouches && evt.changedTouches.length) {
+      src = evt.changedTouches[0];
+    }
+    const offset = $(this.el).offset();
+    p.x = src.pageX - offset.left;
+    p.y = src.pageY - offset.top;
     return p;
   }
 
@@ -1112,75 +1114,13 @@ export class App {
   }
 
   downloadSVG(fileName) {
-    if (!fileName) {
-      fileName = "complexViewer";
-    }
+    downloadSVGString(this.getSVG(), fileName || "complexViewer.svg");
+  }
 
-    const content = this.getSVG();
-    const newContentType = "image/svg+xml;charset=utf-8";
-
-    function dataURItoBlob(binary) {
-      let array = [];
-      let te;
-
-      try {
-        te = new TextEncoder("utf-8");
-      } catch (e) {
-        te = undefined;
-      }
-
-      if (te) {
-        array = te.encode(binary); // html5 encoding api way
-      } else {
-        // https://stackoverflow.com/a/18729931/368214
-        // fixes unicode bug
-        for (let i = 0; i < binary.length; i++) {
-          let charCode = binary.charCodeAt(i);
-          if (charCode < 0x80) array.push(charCode);
-          else if (charCode < 0x800) {
-            array.push(0xc0 | (charCode >> 6),
-              0x80 | (charCode & 0x3f));
-          } else if (charCode < 0xd800 || charCode >= 0xe000) {
-            array.push(0xe0 | (charCode >> 12),
-              0x80 | ((charCode >> 6) & 0x3f),
-              0x80 | (charCode & 0x3f));
-          } else { // surrogate pair
-            i++;
-            // UTF-16 encodes 0x10000-0x10FFFF by
-            // subtracting 0x10000 and splitting the
-            // 20 bits of 0x0-0xFFFFF into two halves
-            charCode = 0x10000 + (((charCode & 0x3ff) << 10) |
-              (binary.charCodeAt(i) & 0x3ff));
-            array.push(0xf0 | (charCode >> 18),
-              0x80 | ((charCode >> 12) & 0x3f),
-              0x80 | ((charCode >> 6) & 0x3f),
-              0x80 | (charCode & 0x3f));
-          }
-        }
-      }
-
-      return new Blob([new Uint8Array(array)], {
-        type: newContentType
-      });
-    }
-
-    let blob = dataURItoBlob(content);
-
-    if (navigator.msSaveOrOpenBlob) {
-      navigator.msSaveOrOpenBlob(blob, fileName);
-    } else {
-      const a = document.createElement("a");
-      a.href = window.URL.createObjectURL(blob);
-      // Give filename you wish to download
-      a.download = fileName;
-      a.style.display = "none";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(a.href); // clear up url reference to blob so it can be g.c.'ed
-    }
-
-    blob = null;
+  downloadPNG(fileName, scale = 2) {
+    const width = this.svgElement.parentNode.clientWidth || this.svgElement.clientWidth;
+    const height = this.svgElement.parentNode.clientHeight || this.svgElement.clientHeight;
+    downloadPNGFromSVGString(this.getSVG(), fileName || "complexViewer.png", width, height, scale);
   }
 
 }

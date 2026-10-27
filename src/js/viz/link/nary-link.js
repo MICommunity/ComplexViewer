@@ -1,6 +1,7 @@
 import {polygonHull} from "d3-polygon";
 import {Link} from "./link";
 import {rotatePointAboutPoint} from "../../geom";
+import {svgns} from "../../svgns";
 
 export class NaryLink extends Link {
     constructor(id, app, sourceId) {
@@ -22,7 +23,7 @@ export class NaryLink extends Link {
                 this._path.setAttribute("fill", "none");
                 this._path.setAttribute("stroke", "black");
             }
-            this._path.ontouchstart = evt => self.touchStart(evt);
+            this._path.ontouchstart = evt => this.touchStart(evt);
         }
         return this._path;
     }
@@ -31,13 +32,54 @@ export class NaryLink extends Link {
         if(!this._path2) {
             this._path2 = this._createElement("path");
             this._path2.setAttribute("fill", "none");
-            this._path2.ontouchstart = evt => self.touchStart(evt);
+            this._path2.ontouchstart = evt => this.touchStart(evt);
         }
         return this._path2;
     }
 
+    // yellow halo following the complex outline, drawn just behind it; shown on
+    // hover and while the complex is pressed or dragged
+    get haloPath () {
+        if (!this._haloPath) {
+            const halo = document.createElementNS(svgns, "path");
+            halo.classList.add("highlight", "complex-highlight");
+            halo.setAttribute("fill", "none");
+            halo.setAttribute("stroke", "#ffff99");
+            halo.setAttribute("stroke-width", "17"); // white outline is 7px wide; ~5px of yellow shows outside it
+            halo.setAttribute("stroke-linejoin", "round");
+            halo.setAttribute("stroke-opacity", "0");
+            halo.setAttribute("pointer-events", "none");
+            this._haloPath = halo;
+        }
+        return this._haloPath;
+    }
+
     showHighlight (show) {
-        this.highlightParticipants(show);
+        this.haloPath.setAttribute("stroke-opacity", show ? "1" : "0");
+    }
+
+    mouseOver(evt) {
+        super.mouseOver(evt);
+        this.showHighlight(true);
+        return false;
+    }
+
+    mouseOut(evt) {
+        super.mouseOut(evt);
+        this.showHighlight(this.app.isHighlightPinned(this)); // keep it while the complex is pressed
+        return false;
+    }
+
+    mouseDown(evt) {
+        super.mouseDown(evt);
+        this.app.setTouchedParticipant(this);
+        return false;
+    }
+
+    touchStart(evt) {
+        super.touchStart(evt);
+        this.app.setTouchedParticipant(this);
+        return false;
     }
 
     check () {
@@ -48,6 +90,7 @@ export class NaryLink extends Link {
     show() {
         // this.path.setAttribute("stroke-width", this.app.z);
         // this.setLinkCoordinates(); // having this here slows down start up. instead see getPosition in complex.js
+        this.app.naryLinks.appendChild(this.haloPath);
         this.app.naryLinks.appendChild(this.path);
         this.app.naryLinks.appendChild(this.path2);
     }
@@ -64,6 +107,7 @@ export class NaryLink extends Link {
         if (hullValues) {
             this.path.setAttribute("d", hullValues);
             this.path2.setAttribute("d", hullValues);
+            this.haloPath.setAttribute("d", hullValues);
         }
         if (this.complex && !dontPropogate) {
             this.complex.setAllLinkCoordinates();
